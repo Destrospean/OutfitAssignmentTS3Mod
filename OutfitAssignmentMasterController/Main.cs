@@ -10,11 +10,6 @@ namespace Destrospean.OutfitAssignment.MasterController
     [MonoPatcherLib.Plugin]
     public class Main
     {
-        static Main()
-        {
-            LoadSaveManager.ObjectGroupsPreLoad += () => Interactions.AssignOutfitToInteraction.Singleton = new AssignOutfitToInteraction.DefinitionModified();
-        }
-
         public class AssignOutfitToInteraction : Interactions.AssignOutfitToInteraction
         {
             public class DefinitionModified : ImmediateInteractionDefinition<Sim, Sim, AssignOutfitToInteraction>
@@ -55,6 +50,11 @@ namespace Destrospean.OutfitAssignment.MasterController
                 }
                 return true;
             }
+        }
+
+        static Main()
+        {
+            LoadSaveManager.ObjectGroupsPreLoad += () => Interactions.AssignOutfitToInteraction.Singleton = new AssignOutfitToInteraction.DefinitionModified();
         }
 
         static bool EditSpecialOutfit(Sim actor, string specialOutfitKey)
