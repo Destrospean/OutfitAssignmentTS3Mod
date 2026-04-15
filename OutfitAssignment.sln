@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutfitAssignment", "OutfitAssignment\OutfitAssignment.csproj", "{D5E41DB2-3F43-4EEB-9CC7-303D24C203C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoPatcher", "..\MonoPatcher\MonoPatcher\MonoPatcher.csproj", "{91460F7B-9C23-4A43-AB52-95EAC8D52D93}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Destrospean.InteractionInstanceAdditions", "Destrospean.InteractionInstanceAdditions\Destrospean.InteractionInstanceAdditions.csproj", "{6A9A443F-2CF4-4C27-B28A-5C4852B03D4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutfitAssignmentMasterController", "OutfitAssignmentMasterController\OutfitAssignmentMasterController.csproj", "{74388C69-712C-4221-80E0-45974A7CEAA7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6A9A443F-2CF4-4C27-B28A-5C4852B03D4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A9A443F-2CF4-4C27-B28A-5C4852B03D4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A9A443F-2CF4-4C27-B28A-5C4852B03D4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A9A443F-2CF4-4C27-B28A-5C4852B03D4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74388C69-712C-4221-80E0-45974A7CEAA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74388C69-712C-4221-80E0-45974A7CEAA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74388C69-712C-4221-80E0-45974A7CEAA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74388C69-712C-4221-80E0-45974A7CEAA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91460F7B-9C23-4A43-AB52-95EAC8D52D93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91460F7B-9C23-4A43-AB52-95EAC8D52D93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91460F7B-9C23-4A43-AB52-95EAC8D52D93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91460F7B-9C23-4A43-AB52-95EAC8D52D93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5E41DB2-3F43-4EEB-9CC7-303D24C203C1}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{D5E41DB2-3F43-4EEB-9CC7-303D24C203C1}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{D5E41DB2-3F43-4EEB-9CC7-303D24C203C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5E41DB2-3F43-4EEB-9CC7-303D24C203C1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+EndGlobal
