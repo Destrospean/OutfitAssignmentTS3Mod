@@ -190,6 +190,7 @@ namespace Destrospean.OutfitAssignment
                 if (TryGetInteractionInstanceType(Target, out interactionInstanceType))
                 {
                     OutfitAssignment.UnassignOutfitToInteraction(Target.SimDescription, interactionInstanceType);
+                    Target.SimDescription.RemoveSpecialOutfit(interactionInstanceType.FullName);
                 }
                 return true;
             }
