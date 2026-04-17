@@ -168,7 +168,10 @@ namespace Destrospean.OutfitAssignment
                 IDictionary<string, object> interactionInstanceTypes = new SortedDictionary<string, object>(System.StringComparer.InvariantCultureIgnoreCase);
                 foreach (OutfitAssignment outfitAssignment in OutfitAssignment.OutfitAssignments)
                 {
-                    interactionInstanceTypes[outfitAssignment.InteractionInstanceType.FullName] = outfitAssignment.InteractionInstanceType.FullName;
+                    if (outfitAssignment.SimDescription == target.SimDescription)
+                    {
+                        interactionInstanceTypes[outfitAssignment.InteractionInstanceType.FullName] = outfitAssignment.InteractionInstanceType.FullName;
+                    }
                 }
                 string localizationKey = "/Dialogs/InteractionListDialog",
                 text = Dialogs.ComboSelectionDialog.Show(entries: interactionInstanceTypes, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select Interaction", defaultEntry: new List<object>(interactionInstanceTypes.Values)[0]) as string;
