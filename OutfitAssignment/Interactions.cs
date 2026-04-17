@@ -26,12 +26,12 @@ namespace Destrospean.OutfitAssignment
             {
                 public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
                 {
-                    return "Assign Outfit To Interaction" /*Common.Localize(actor.IsFemale, sLocalizationKey + ":Name")*/;
+                    return "Assign Outfit to Interaction" /*Common.Localize(actor.IsFemale, sLocalizationKey + ":Name")*/;
                 }
 
                 public override string[] GetPath(bool isFemale)
                 {
-                    return new string[]
+                    return new[]
                     {
                         "Outfit Assignments..." /*Common.Localize(isFemale, sLocalizationKey + ":Path")*/, 
                     };
@@ -106,7 +106,7 @@ namespace Destrospean.OutfitAssignment
                     interactionInstanceTypes[type.FullName] = type.FullName;
                 }
                 string localizationKey = "/Dialogs/InteractionListDialog",
-                text = Dialogs.ComboSelectionDialog.Show(entries: interactionInstanceTypes, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select an interaction to apply an outfit to", defaultEntry: new List<object>(interactionInstanceTypes.Values)[0]) as string;
+                text = Dialogs.ComboSelectionDialog.Show(entries: interactionInstanceTypes, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select Interaction", defaultEntry: new List<object>(interactionInstanceTypes.Values)[0]) as string;
                 if (text == null)
                 {
                     interactionInstanceType = null;
@@ -131,6 +131,62 @@ namespace Destrospean.OutfitAssignment
                     {
                         Actor.SimDescription.RemoveSpecialOutfit(interactionInstanceType.FullName);
                     }
+                }
+                return true;
+            }
+        }
+
+        public class UnassignOutfitToInteraction : ImmediateInteraction<Sim, Sim>
+        {
+            public static InteractionDefinition Singleton = new Definition();
+
+            public const string sLocalizationKey = "/UnassignOutfitToInteraction";
+
+            public class Definition : ImmediateInteractionDefinition<Sim, Sim, UnassignOutfitToInteraction>
+            {
+                public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
+                {
+                    return "Unassign Outfit to Interaction" /*Common.Localize(actor.IsFemale, sLocalizationKey + ":Name")*/;
+                }
+
+                public override string[] GetPath(bool isFemale)
+                {
+                    return new[]
+                    {
+                        "Outfit Assignments..." /*Common.Localize(isFemale, sLocalizationKey + ":Path")*/, 
+                    };
+                }
+
+                public override bool Test(Sim actor, Sim target, bool isAutonomous, ref Sims3.SimIFace.GreyedOutTooltipCallback greyedOutTooltipCallback)
+                {
+                    return target.IsHuman;
+                }
+            }
+
+            protected static bool TryGetInteractionInstanceType(Sim target, out System.Type interactionInstanceType)
+            {
+                IDictionary<string, object> interactionInstanceTypes = new SortedDictionary<string, object>(System.StringComparer.InvariantCultureIgnoreCase);
+                foreach (OutfitAssignment outfitAssignment in OutfitAssignment.OutfitAssignments)
+                {
+                    interactionInstanceTypes[outfitAssignment.InteractionInstanceType.FullName] = outfitAssignment.InteractionInstanceType.FullName;
+                }
+                string localizationKey = "/Dialogs/InteractionListDialog",
+                text = Dialogs.ComboSelectionDialog.Show(entries: interactionInstanceTypes, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select Interaction", defaultEntry: new List<object>(interactionInstanceTypes.Values)[0]) as string;
+                if (text == null)
+                {
+                    interactionInstanceType = null;
+                    return false;
+                }
+                interactionInstanceType = System.Array.Find(Common.InteractionInstanceTypes, x => x.FullName == text);
+                return true;
+            }
+
+            public override bool Run()
+            {
+                System.Type interactionInstanceType;
+                if (TryGetInteractionInstanceType(Target, out interactionInstanceType))
+                {
+                    OutfitAssignment.UnassignOutfitToInteraction(Target.SimDescription, interactionInstanceType);
                 }
                 return true;
             }

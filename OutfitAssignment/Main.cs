@@ -13,15 +13,7 @@ namespace Destrospean.OutfitAssignment
         {
             Common.InitInteractionInstanceTypes();
             EventListener simDescriptionDisposedListener = null,
-            simInstantiatedListener = null,
-            simSelectedListener = null;
-            World.sOnObjectPlacedInLotEventHandler += (sender, e) =>
-                {
-                    World.OnObjectPlacedInLotEventArgs onObjectPlacedInLotEventArgs = e as World.OnObjectPlacedInLotEventArgs;
-                    if (onObjectPlacedInLotEventArgs != null)
-                    {
-                    }
-                };
+            simInstantiatedListener = null;
             World.sOnWorldLoadFinishedEventHandler += (sender, e) =>
                 {
                     foreach (Sim sim in Sims3.Gameplay.Queries.GetObjects<Sim>())
@@ -60,26 +52,13 @@ namespace Destrospean.OutfitAssignment
                             }
                             return ListenerAction.Keep;
                         });
-                    simSelectedListener = EventTracker.AddListener(EventTypeId.kEventSimSelected, evt =>
-                        {
-                            try
-                            {
-                            }
-                            catch (Exception ex)
-                            {
-                                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
-                            }
-                            return ListenerAction.Keep;
-                        });
                 };
             World.sOnWorldQuitEventHandler += (sender, e) =>
                 {
                     EventTracker.RemoveListener(simDescriptionDisposedListener);
                     EventTracker.RemoveListener(simInstantiatedListener);
-                    EventTracker.RemoveListener(simSelectedListener);
                     simDescriptionDisposedListener = null;
                     simInstantiatedListener = null;
-                    simSelectedListener = null;
                 };
             InteractionInstanceAdditions.OnInteractedStarted += (interaction) =>
                 {
@@ -124,6 +103,7 @@ namespace Destrospean.OutfitAssignment
             if (sim != null)
             {
                 sim.AddInteraction(Interactions.AssignOutfitToInteraction.Singleton, true);
+                sim.AddInteraction(Interactions.UnassignOutfitToInteraction.Singleton, true);
             }
         }
     }
