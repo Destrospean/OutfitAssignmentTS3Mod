@@ -159,19 +159,16 @@ namespace Destrospean.OutfitAssignment
 
                 public override bool Test(Sim actor, Sim target, bool isAutonomous, ref Sims3.SimIFace.GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return target.IsHuman;
+                    return OutfitAssignment.GetAllOutfitAssignments(target.SimDescription).Length > 0;
                 }
             }
 
             protected static bool TryGetInteractionInstanceType(Sim target, out System.Type interactionInstanceType)
             {
                 IDictionary<string, object> interactionInstanceTypes = new SortedDictionary<string, object>(System.StringComparer.InvariantCultureIgnoreCase);
-                foreach (OutfitAssignment outfitAssignment in OutfitAssignment.OutfitAssignments)
+                foreach (OutfitAssignment outfitAssignment in OutfitAssignment.GetAllOutfitAssignments(target.SimDescription))
                 {
-                    if (outfitAssignment.SimDescription == target.SimDescription)
-                    {
-                        interactionInstanceTypes[outfitAssignment.InteractionInstanceType.FullName] = outfitAssignment.InteractionInstanceType.FullName;
-                    }
+                    interactionInstanceTypes[outfitAssignment.InteractionInstanceType.FullName] = outfitAssignment.InteractionInstanceType.FullName;
                 }
                 string localizationKey = "/Dialogs/InteractionListDialog",
                 text = Dialogs.ComboSelectionDialog.Show(entries: interactionInstanceTypes, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select Interaction", defaultEntry: new List<object>(interactionInstanceTypes.Values)[0]) as string;
