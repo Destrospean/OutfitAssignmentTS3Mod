@@ -67,7 +67,7 @@ namespace Destrospean.OutfitAssignment
                     {
                         outfitAssignment.PreviousOutfitCategory = interaction.InstanceActor.CurrentOutfitCategory;
                         outfitAssignment.PreviousOutfitIndex = interaction.InstanceActor.CurrentOutfitIndex;
-                        interaction.InstanceActor.SwitchToOutfitWithSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.InteractionInstanceType.FullName)));
+                        interaction.InstanceActor.SwitchToOutfitWithSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
                     }
                 };
             InteractionInstanceAdditions.OnInteractionEnded += (interaction) =>
@@ -85,7 +85,7 @@ namespace Destrospean.OutfitAssignment
                     {
                         outfitAssignment.PreviousOutfitCategory = interaction.InstanceActor.CurrentOutfitCategory;
                         outfitAssignment.PreviousOutfitIndex = interaction.InstanceActor.CurrentOutfitIndex;
-                        interaction.InstanceActor.SwitchToOutfitWithSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.InteractionInstanceType.FullName)));
+                        interaction.InstanceActor.SwitchToOutfitWithSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
                     }
                 };
             InteractionInstanceAdditions.StandardExitPostCallCallback += (interaction) =>

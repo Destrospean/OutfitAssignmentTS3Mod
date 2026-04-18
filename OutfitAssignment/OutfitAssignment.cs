@@ -20,18 +20,21 @@ namespace Destrospean.OutfitAssignment
 
         public readonly SimDescription SimDescription;
 
-        public OutfitAssignment(SimDescription simDescription, Type interactionInstanceType, InteractionInstanceCallbackTypes entryCallbackType, InteractionInstanceCallbackTypes exitCallbackType)
+        public readonly string SpecialOutfitKey;
+
+        public OutfitAssignment(SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceCallbackTypes entryCallbackType, InteractionInstanceCallbackTypes exitCallbackType)
         {
             EntryCallbackType = entryCallbackType;
             ExitCallbackType = exitCallbackType;
             InteractionInstanceType = interactionInstanceType;
             SimDescription = simDescription;
+            SpecialOutfitKey = specialOutfitKey;
         }
 
-        public static void AssignOutfitToInteraction(SimDescription simDescription, Type interactionInstanceType, InteractionInstanceCallbackTypes entryCallbackType, InteractionInstanceCallbackTypes exitCallbackType)
+        public static void AssignOutfitToInteraction(SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceCallbackTypes entryCallbackType, InteractionInstanceCallbackTypes exitCallbackType)
         {
             UnassignOutfitToInteraction(simDescription, interactionInstanceType);
-            OutfitAssignments.Add(new OutfitAssignment(simDescription, interactionInstanceType, entryCallbackType, exitCallbackType));
+            OutfitAssignments.Add(new OutfitAssignment(simDescription, specialOutfitKey, interactionInstanceType, entryCallbackType, exitCallbackType));
         }
 
         public static OutfitAssignment[] GetAllOutfitAssignments(SimDescription simDescription)

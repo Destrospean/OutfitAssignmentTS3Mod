@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Sims3.Gameplay.Autonomy;
 using Sims3.Gameplay.CAS;
 using Sims3.Gameplay.Utilities;
@@ -10,9 +11,9 @@ namespace Destrospean.OutfitAssignment
     {
         internal const string kLocalizationPath = "Destrospean/OutfitAssignment";
 
-        static System.Type[] sInteractionInstanceTypes;
+        static Type[] sInteractionInstanceTypes;
 
-        public static System.Type[] InteractionInstanceTypes
+        public static Type[] InteractionInstanceTypes
         {
             get
             {
@@ -21,6 +22,20 @@ namespace Destrospean.OutfitAssignment
                     InitInteractionInstanceTypes();
                 }
                 return sInteractionInstanceTypes;
+            }
+        }
+
+        class InteractionInstanceTypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>
+        {
+            const string sLocalizationKey = kLocalizationPath + "/Dialogs/InteractionListDialog";
+
+            public InteractionInstanceTypeColumn() : base(sLocalizationKey + "/Header:Text", sLocalizationKey + "/Header:Tooltip", 40)
+            {
+            }
+
+            public override ObjectPicker.ColumnInfo GetValue(Type interactionInstanceType)
+            {
+                return new ObjectPicker.TextColumn(interactionInstanceType == null ? "" : interactionInstanceType.FullName);
             }
         }
 
@@ -34,15 +49,15 @@ namespace Destrospean.OutfitAssignment
                     AutonomyTuning.AddTuning(newType.FullName, baseType.FullName, tuning);
                 }
             }
-            InteractionObjectPair.sTuningCache.Remove(new Sims3.Gameplay.Utilities.Pair<Type, Type>(newType, baseType));
+            InteractionObjectPair.sTuningCache.Remove(new Pair<Type, Type>(newType, baseType));
         }
 
         public static void InitInteractionInstanceTypes()
         {
-            System.Collections.Generic.List<System.Type> interactionInstanceTypes = new System.Collections.Generic.List<System.Type>();
-            foreach (System.Reflection.Assembly assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            List<Type> interactionInstanceTypes = new List<Type>();
+            foreach (System.Reflection.Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                interactionInstanceTypes.AddRange(System.Array.FindAll(assembly.GetTypes(), x => typeof(Sims3.Gameplay.Interactions.InteractionInstance).IsAssignableFrom(x) && x.IsClass && !x.IsAbstract));
+                interactionInstanceTypes.AddRange(Array.FindAll(assembly.GetTypes(), x => typeof(Sims3.Gameplay.Interactions.InteractionInstance).IsAssignableFrom(x) && x.IsClass && !x.IsAbstract));
             }
             sInteractionInstanceTypes = interactionInstanceTypes.ToArray();
         }
@@ -91,6 +106,35 @@ namespace Destrospean.OutfitAssignment
             else
             {
                 StyledNotification.Show(new StyledNotification.Format(message, style));
+            }
+        }
+
+        public static bool TryGetInteractionInstanceTypes(out Type[] interactionInstanceTypes, Type[] allInteractionInstanceTypes = null)
+        {
+            try
+            {
+                string localizationKey = "/Dialogs/InteractionListDialog";
+                bool okayed;
+                List<Type> selected = Dialogs.ObjectPickerDialog.Show(Localize(localizationKey + ":Title"), new List<ObjectPicker.TabInfo>
+                    {
+                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), new List<Type>(allInteractionInstanceTypes ?? InteractionInstanceTypes).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                    }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
+                    {
+                        new InteractionInstanceTypeColumn()
+                    }, int.MaxValue, out okayed);
+                if (okayed)
+                {
+                    interactionInstanceTypes = selected.ToArray();
+                    return true;
+                }
+                interactionInstanceTypes = null;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ((Sims3.SimIFace.IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                interactionInstanceTypes = null;
+                return false;
             }
         }
     }

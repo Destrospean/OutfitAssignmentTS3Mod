@@ -34,18 +34,36 @@ namespace Destrospean.OutfitAssignment.MasterController
 
             public override bool Run()
             {
-                System.Type interactionInstanceType;
+                System.Type[] interactionInstanceTypes;
                 InteractionInstanceCallbackTypes? entryCallbackType, exitCallbackType;
-                if (TryGetInteractionInstanceType(Target, out interactionInstanceType) && TryGetApplyOutfitCallbackType(Target, out entryCallbackType) && TryGetRemoveOutfitCallbackType(Target, out exitCallbackType))
+                if (Common.TryGetInteractionInstanceTypes(out interactionInstanceTypes) && TryGetEntryCallbackType(Target, out entryCallbackType) && TryGetExitCallbackType(Target, out exitCallbackType))
                 {
-                    bool outfitAlreadyExisted = Actor.SimDescription.HasSpecialOutfit(interactionInstanceType.FullName);
-                    if (EditSpecialOutfit(Actor, interactionInstanceType.FullName))
+                    string specialOutfitKey = "";
+                    foreach (System.Type interactionInstanceType in interactionInstanceTypes)
                     {
-                        OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        OutfitAssignment outfitAssignment;
+                        if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
+                        {
+                            if (!string.IsNullOrEmpty(specialOutfitKey))
+                            {
+                                Common.Notify(Common.Localize(Target.IsFemale, sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", Target), Target.SimDescription, Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
+                                return true;
+                            }
+                            specialOutfitKey = outfitAssignment.SpecialOutfitKey;
+                        }
                     }
-                    else if (!outfitAlreadyExisted)
+                    specialOutfitKey = string.IsNullOrEmpty(specialOutfitKey) ? "OutfitAssignment_" + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID() : specialOutfitKey;
+                    bool outfitIsPreexisting = Actor.SimDescription.HasSpecialOutfit(specialOutfitKey);
+                    if (EditSpecialOutfit(Actor, specialOutfitKey))
                     {
-                        Actor.SimDescription.RemoveSpecialOutfit(interactionInstanceType.FullName);
+                        foreach (System.Type interactionInstanceType in interactionInstanceTypes)
+                        {
+                            OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        }
+                    }
+                    else if (!outfitIsPreexisting)
+                    {
+                        Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
                 }
                 return true;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.Autonomy;
 using Sims3.Gameplay.Interactions;
@@ -12,7 +13,7 @@ namespace Destrospean.OutfitAssignment
         {
             public static InteractionDefinition Singleton = new Definition();
 
-            public const string sLocalizationKey = "/AssignOutfitToInteraction";
+            public const string sLocalizationKey = "/Interactions/AssignOutfitToInteraction";
 
             class DummyComparer : IComparer<string>
             {
@@ -26,14 +27,14 @@ namespace Destrospean.OutfitAssignment
             {
                 public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
                 {
-                    return "Assign Outfit to Interaction" /*Common.Localize(actor.IsFemale, sLocalizationKey + ":Name")*/;
+                    return Common.Localize(actor.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
                 {
                     return new[]
                     {
-                        "Outfit Assignments..." /*Common.Localize(isFemale, sLocalizationKey + ":Path")*/, 
+                        Common.Localize(isFemale, sLocalizationKey + ":Path")
                     };
                 }
 
@@ -43,93 +44,88 @@ namespace Destrospean.OutfitAssignment
                 }
             }
 
-            protected static bool TryGetApplyOutfitCallbackType(Sim target, out InteractionInstanceCallbackTypes? callbackType)
+            protected static bool TryGetEntryCallbackType(Sim target, out InteractionInstanceCallbackTypes? callbackType)
             {
-                string localizationKey = "/Dialogs/WhenToApplyOutfitDialog",
+                string localizationKey = "/Dialogs/EntryCallbackTypeDialog",
                 text = Dialogs.ComboSelectionDialog.Show(entries: new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
-                            //Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionStarted"),
-                            "Interaction Started (for Solo)",
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionStarted"),
                             InteractionInstanceCallbackTypes.InteractionStarted.ToString()
                         },
                         {
-                            //Common.Localize(target.IsFemale, localizationKey + "/Options:StandardEntry"),
-                            "Standard Entry (for Objects)",
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:StandardEntry"),
                             InteractionInstanceCallbackTypes.StandardEntry.ToString()
                         }
-                    }, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select Entry Type", defaultEntry: InteractionInstanceCallbackTypes.InteractionStarted.ToString()) as string;
+                    }, titleText: Common.Localize(target.IsFemale, localizationKey + ":Title"), defaultEntry: InteractionInstanceCallbackTypes.InteractionStarted.ToString()) as string;
                 if (text == null)
                 {
                     callbackType = null;
                     return false;
                 }
-                callbackType = (InteractionInstanceCallbackTypes)System.Enum.Parse(typeof(InteractionInstanceCallbackTypes), text);
+                callbackType = (InteractionInstanceCallbackTypes)Enum.Parse(typeof(InteractionInstanceCallbackTypes), text);
                 return true;
             }
 
-            protected static bool TryGetRemoveOutfitCallbackType(Sim target, out InteractionInstanceCallbackTypes? callbackType)
+            protected static bool TryGetExitCallbackType(Sim target, out InteractionInstanceCallbackTypes? callbackType)
             {
-                string localizationKey = "/Dialogs/WhenToRemoveOutfitDialog",
+                string localizationKey = "/Dialogs/ExitCallbackTypeDialog",
                 text = Dialogs.ComboSelectionDialog.Show(entries: new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
-                            //Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionEnded"),
-                            "Interaction Ended (for Solo)",
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionEnded"),
                             InteractionInstanceCallbackTypes.InteractionEnded.ToString()
                         },
                         {
-                            //Common.Localize(target.IsFemale, localizationKey + "/Options:StandardExit"),
-                            "Standard Exit (for Objects)",
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:StandardExit"),
                             InteractionInstanceCallbackTypes.StandardExit.ToString()
                         },
                         {
-                            //Common.Localize(target.IsFemale, localizationKey + "/Options:Never"),
-                            "Never",
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:Never"),
                             InteractionInstanceCallbackTypes.Never.ToString()
                         }
-                    }, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select Exit Type", defaultEntry: InteractionInstanceCallbackTypes.InteractionEnded.ToString()) as string;
+                    }, titleText: Common.Localize(target.IsFemale, localizationKey + ":Title"), defaultEntry: InteractionInstanceCallbackTypes.InteractionEnded.ToString()) as string;
                 if (text == null)
                 {
                     callbackType = null;
                     return false;
                 }
-                callbackType = (InteractionInstanceCallbackTypes)System.Enum.Parse(typeof(InteractionInstanceCallbackTypes), text);
-                return true;
-            }
-
-            protected static bool TryGetInteractionInstanceType(Sim target, out System.Type interactionInstanceType)
-            {
-                IDictionary<string, object> interactionInstanceTypes = new SortedDictionary<string, object>(System.StringComparer.InvariantCultureIgnoreCase);
-                foreach (System.Type type in Common.InteractionInstanceTypes)
-                {
-                    interactionInstanceTypes[type.FullName] = type.FullName;
-                }
-                string localizationKey = "/Dialogs/InteractionListDialog",
-                text = Dialogs.ComboSelectionDialog.Show(entries: interactionInstanceTypes, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select Interaction", defaultEntry: new List<object>(interactionInstanceTypes.Values)[0]) as string;
-                if (text == null)
-                {
-                    interactionInstanceType = null;
-                    return false;
-                }
-                interactionInstanceType = System.Array.Find(Common.InteractionInstanceTypes, x => x.FullName == text);
+                callbackType = (InteractionInstanceCallbackTypes)Enum.Parse(typeof(InteractionInstanceCallbackTypes), text);
                 return true;
             }
 
             public override bool Run()
             {
-                System.Type interactionInstanceType;
+                Type[] interactionInstanceTypes;
                 InteractionInstanceCallbackTypes? entryCallbackType, exitCallbackType;
-                if (TryGetInteractionInstanceType(Target, out interactionInstanceType) && TryGetApplyOutfitCallbackType(Target, out entryCallbackType) && TryGetRemoveOutfitCallbackType(Target, out exitCallbackType))
+                if (Common.TryGetInteractionInstanceTypes(out interactionInstanceTypes) && TryGetEntryCallbackType(Target, out entryCallbackType) && TryGetExitCallbackType(Target, out exitCallbackType))
                 {
-                    bool outfitAlreadyExisted = Actor.SimDescription.HasSpecialOutfit(interactionInstanceType.FullName);
-                    if (Actor.EditSpecialOutfit(interactionInstanceType.FullName))
+                    string specialOutfitKey = "";
+                    foreach (Type interactionInstanceType in interactionInstanceTypes)
                     {
-                        OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        OutfitAssignment outfitAssignment;
+                        if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
+                        {
+                            if (!string.IsNullOrEmpty(specialOutfitKey))
+                            {
+                                Common.Notify(Common.Localize(Target.IsFemale, sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", Target), Target.SimDescription, Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
+                                return true;
+                            }
+                            specialOutfitKey = outfitAssignment.SpecialOutfitKey;
+                        }
                     }
-                    else if (!outfitAlreadyExisted)
+                    specialOutfitKey = string.IsNullOrEmpty(specialOutfitKey) ? "OutfitAssignment_" + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID() : specialOutfitKey;
+                    bool outfitIsPreexisting = Actor.SimDescription.HasSpecialOutfit(specialOutfitKey);
+                    if (Actor.EditSpecialOutfit(specialOutfitKey))
                     {
-                        Actor.SimDescription.RemoveSpecialOutfit(interactionInstanceType.FullName);
+                        foreach (Type interactionInstanceType in interactionInstanceTypes)
+                        {
+                            OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        }
+                    }
+                    else if (!outfitIsPreexisting)
+                    {
+                        Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
                 }
                 return true;
@@ -140,20 +136,20 @@ namespace Destrospean.OutfitAssignment
         {
             public static InteractionDefinition Singleton = new Definition();
 
-            public const string sLocalizationKey = "/UnassignOutfitToInteraction";
+            public const string sLocalizationKey = "/Interactions/UnassignOutfitToInteraction";
 
             public class Definition : ImmediateInteractionDefinition<Sim, Sim, UnassignOutfitToInteraction>
             {
                 public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
                 {
-                    return "Unassign Outfit to Interaction" /*Common.Localize(actor.IsFemale, sLocalizationKey + ":Name")*/;
+                    return Common.Localize(actor.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
                 {
                     return new[]
                     {
-                        "Outfit Assignments..." /*Common.Localize(isFemale, sLocalizationKey + ":Path")*/, 
+                        Common.Localize(isFemale, sLocalizationKey + ":Path")
                     };
                 }
 
@@ -163,31 +159,20 @@ namespace Destrospean.OutfitAssignment
                 }
             }
 
-            protected static bool TryGetInteractionInstanceType(Sim target, out System.Type interactionInstanceType)
-            {
-                IDictionary<string, object> interactionInstanceTypes = new SortedDictionary<string, object>(System.StringComparer.InvariantCultureIgnoreCase);
-                foreach (OutfitAssignment outfitAssignment in OutfitAssignment.GetAllOutfitAssignments(target.SimDescription))
-                {
-                    interactionInstanceTypes[outfitAssignment.InteractionInstanceType.FullName] = outfitAssignment.InteractionInstanceType.FullName;
-                }
-                string localizationKey = "/Dialogs/InteractionListDialog",
-                text = Dialogs.ComboSelectionDialog.Show(entries: interactionInstanceTypes, titleText: /*Common.Localize(target.IsFemale, localizationKey + ":Title")*/ "Select Interaction", defaultEntry: new List<object>(interactionInstanceTypes.Values)[0]) as string;
-                if (text == null)
-                {
-                    interactionInstanceType = null;
-                    return false;
-                }
-                interactionInstanceType = System.Array.Find(Common.InteractionInstanceTypes, x => x.FullName == text);
-                return true;
-            }
-
             public override bool Run()
             {
-                System.Type interactionInstanceType;
-                if (TryGetInteractionInstanceType(Target, out interactionInstanceType))
+                Type[] interactionInstanceTypes;
+                if (Common.TryGetInteractionInstanceTypes(out interactionInstanceTypes, Array.ConvertAll(OutfitAssignment.GetAllOutfitAssignments(Target.SimDescription), x => x.InteractionInstanceType)))
                 {
-                    OutfitAssignment.UnassignOutfitToInteraction(Target.SimDescription, interactionInstanceType);
-                    Target.SimDescription.RemoveSpecialOutfit(interactionInstanceType.FullName);
+                    foreach (Type interactionInstanceType in interactionInstanceTypes)
+                    {
+                        OutfitAssignment outfitAssignment;
+                        if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment) && Array.FindAll(OutfitAssignment.GetAllOutfitAssignments(Target.SimDescription), x => x.SpecialOutfitKey == outfitAssignment.SpecialOutfitKey).Length == 1)
+                        {
+                            Target.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
+                        }
+                        OutfitAssignment.UnassignOutfitToInteraction(Target.SimDescription, interactionInstanceType);
+                    }
                 }
                 return true;
             }
