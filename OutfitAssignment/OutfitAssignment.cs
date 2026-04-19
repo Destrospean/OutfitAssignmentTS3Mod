@@ -44,7 +44,7 @@ namespace Destrospean.OutfitAssignment
 
         public static void RemoveAllOutfitAssignments(SimDescription simDescription, bool removeSpecialOutfits = false)
         {
-            foreach (var outfitAssignment in new List<OutfitAssignment>(OutfitAssignments))
+            foreach (OutfitAssignment outfitAssignment in new List<OutfitAssignment>(OutfitAssignments))
             {
                 if (outfitAssignment.SimDescription == simDescription)
                 {
