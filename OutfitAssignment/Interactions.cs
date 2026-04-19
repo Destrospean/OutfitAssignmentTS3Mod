@@ -46,7 +46,7 @@ namespace Destrospean.OutfitAssignment
             protected static bool TryGetEntryCallbackType(Sim target, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
             {
                 string localizationKey = "/Dialogs/EntryCallbackTypeDialog",
-                text = Dialogs.ComboSelectionDialog.Show(entries: new SortedDictionary<string, object>(new DummyComparer())
+                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(target.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionStarted"),
@@ -56,7 +56,7 @@ namespace Destrospean.OutfitAssignment
                             Common.Localize(target.IsFemale, localizationKey + "/Options:StandardEntry"),
                             InteractionInstanceTypeUtils.CallbackTypes.StandardEntry.ToString()
                         }
-                    }, title: Common.Localize(target.IsFemale, localizationKey + ":Title"), defaultEntry: InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()) as string;
+                    }, InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()) as string;
                 if (text == null)
                 {
                     callbackType = null;
@@ -69,7 +69,7 @@ namespace Destrospean.OutfitAssignment
             protected static bool TryGetExitCallbackType(Sim target, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
             {
                 string localizationKey = "/Dialogs/ExitCallbackTypeDialog",
-                text = Dialogs.ComboSelectionDialog.Show(entries: new SortedDictionary<string, object>(new DummyComparer())
+                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(target.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionEnded"),
@@ -83,7 +83,7 @@ namespace Destrospean.OutfitAssignment
                             Common.Localize(target.IsFemale, localizationKey + "/Options:Never"),
                             InteractionInstanceTypeUtils.CallbackTypes.Never.ToString()
                         }
-                    }, title: Common.Localize(target.IsFemale, localizationKey + ":Title"), defaultEntry: InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()) as string;
+                    }, InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()) as string;
                 if (text == null)
                 {
                     callbackType = null;
