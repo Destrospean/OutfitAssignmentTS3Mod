@@ -9,8 +9,6 @@ namespace Destrospean.OutfitAssignment
     {
         static Type[] sInteractionInstanceTypes;
 
-        const string kDialogLocalizationPath = Common.kLocalizationPath + "/Dialogs/InteractionListDialog";
-
         public static Type[] InteractionInstanceTypes
         {
             get
@@ -34,7 +32,7 @@ namespace Destrospean.OutfitAssignment
 
         class TextColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>
         {
-            public TextColumn() : base(kDialogLocalizationPath + "/Header:Text", kDialogLocalizationPath + "/Header:Tooltip", 40)
+            public TextColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 40)
             {
             }
 
@@ -46,7 +44,7 @@ namespace Destrospean.OutfitAssignment
 
         class TypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>
         {
-            public TypeColumn() : base(kDialogLocalizationPath + "/Header:Text", kDialogLocalizationPath + "/Header:Tooltip", 40)
+            public TypeColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 40)
             {
             }
 
@@ -70,36 +68,37 @@ namespace Destrospean.OutfitAssignment
         {
             try
             {
+                const string interactionListDialogLocalizationPath = Common.kLocalizationPath + "/Dialogs/InteractionListDialog",
+                namespaceListDialogLocalizationPath = Common.kLocalizationPath + "/Dialogs/NamespaceListDialog";
                 allInteractionInstanceTypes = allInteractionInstanceTypes ?? InteractionInstanceTypes;
                 Array.Sort(allInteractionInstanceTypes, (a, b) => a.FullName.CompareTo(b.FullName));
-                int remainder = allInteractionInstanceTypes.Length;
-                string[] pageLabels = new string[(int)Math.Ceiling((double)remainder / Tuning.kInteractionInstanceTypesPerPage)];
-                for (int i = 0; i < pageLabels.Length; i++)
+                List<string> namespaces = new List<string>();
+                foreach (Type interactionInstanceType in allInteractionInstanceTypes)
                 {
-                    pageLabels[i] = "[" + allInteractionInstanceTypes[i * Tuning.kInteractionInstanceTypesPerPage].FullName + "..." + allInteractionInstanceTypes[i * Tuning.kInteractionInstanceTypesPerPage + (remainder < Tuning.kInteractionInstanceTypesPerPage ? remainder : Tuning.kInteractionInstanceTypesPerPage) - 1].FullName + "]";
-                    remainder -= Tuning.kInteractionInstanceTypesPerPage;
+                    if (!namespaces.Contains(interactionInstanceType.Namespace))
+                    {
+                        namespaces.Add(interactionInstanceType.Namespace);
+                    }
                 }
                 bool confirmed;
-                List<string> selectedPageLabels = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(kDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                List<string> selectedNamespaces = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(namespaceListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
                     {
-                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), new List<string>(pageLabels).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), namespaces.ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
                     }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>>
                     {
-                        new TextColumn()
+                        new TextColumn(namespaceListDialogLocalizationPath)
                     }, 1, out confirmed);
-                if (!confirmed || selectedPageLabels == null || selectedPageLabels.Count == 0)
+                if (!confirmed || selectedNamespaces == null || selectedNamespaces.Count == 0)
                 {
                     selectedInteractionInstanceTypes = null;
                     return false;
                 }
-                int lowerBound = Array.FindIndex(allInteractionInstanceTypes, x => x.FullName == selectedPageLabels[0].Remove(selectedPageLabels[0].IndexOf("...")).Replace("[", "")),
-                upperBound = Array.FindIndex(allInteractionInstanceTypes, x => x.FullName == selectedPageLabels[0].Substring(selectedPageLabels[0].IndexOf("...") + 3).Replace("]", ""));
-                selectedInteractionInstanceTypes = (Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(kDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                selectedInteractionInstanceTypes = (Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(interactionListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
                     {
-                        new ObjectPicker.TabInfo("shop_all_r2", "[" + lowerBound + "..." + upperBound + "]", new List<Type>(allInteractionInstanceTypes).GetRange(lowerBound, upperBound - lowerBound + 1).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                        new ObjectPicker.TabInfo("shop_all_r2", selectedNamespaces[0], new List<Type>(allInteractionInstanceTypes).FindAll(x => x.Namespace == selectedNamespaces[0]).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
                     }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
                     {
-                        new TypeColumn()
+                        new TypeColumn(interactionListDialogLocalizationPath)
                     }, int.MaxValue, out confirmed) ?? new List<Type>()).ToArray();
                 if (!confirmed || selectedInteractionInstanceTypes.Length == 0)
                 {
