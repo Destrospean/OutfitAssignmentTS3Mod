@@ -167,14 +167,14 @@ namespace Destrospean.OutfitAssignment
                 mTable.Area = new Rect(new Vector2(mTable.Area.TopLeft.x, mTable.Area.TopLeft.y), new Vector2(mTable.Area.BottomRight.x + 200, mTable.Area.BottomRight.y));
                 mOkayButton = (Button)mModalDialogWindow.GetChildByID(99576785, false);
                 mOkayButton.TooltipText = Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/Global:Accept");
-                mOkayButton.Enabled = true;
+                mOkayButton.Enabled = false;
                 mOkayButton.Click += OnOkayButtonClick;
                 OkayID = mOkayButton.ID;
                 SelectedID = mOkayButton.ID;
-                Button button = (Button)mModalDialogWindow.GetChildByID(99576786, false);
-                button.TooltipText = Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:Cancel");
-                button.Click += OnCloseButtonClick;
-                CancelID = button.ID;
+                Button cancelButton = (Button)mModalDialogWindow.GetChildByID(99576786, false);
+                cancelButton.TooltipText = Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:Cancel");
+                cancelButton.Click += OnCloseButtonClick;
+                CancelID = cancelButton.ID;
                 mTableOffset = mModalDialogWindow.Area.BottomRight - mModalDialogWindow.Area.TopLeft - (mTable.Area.BottomRight - mTable.Area.TopLeft);
                 mTable.Populate(tabs, headers, selectableRowCount);
                 mTable.mTabs.TabSelect -= mTable.OnTabSelect;
@@ -199,6 +199,7 @@ namespace Destrospean.OutfitAssignment
             void OnSelectionChanged(List<ObjectPicker.RowInfo> selectedRows)
             {
                 Audio.StartSound("ui_tertiary_button");
+                mOkayButton.Enabled = mTable.ObjectTable.SelectedItem > -1 && mTable.ObjectTable.GetRow(mTable.ObjectTable.SelectedItem) != null;
                 OnTableChanged();
             }
 
