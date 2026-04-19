@@ -7,7 +7,7 @@ namespace Destrospean.OutfitAssignment
     [Sims3.SimIFace.Persistable]
     public class OutfitAssignment
     {
-        public readonly InteractionInstanceCallbackTypes EntryCallbackType, ExitCallbackType;
+        public readonly InteractionInstanceTypeUtils.CallbackTypes EntryCallbackType, ExitCallbackType;
 
         public readonly Type InteractionInstanceType;
 
@@ -22,7 +22,7 @@ namespace Destrospean.OutfitAssignment
 
         public readonly string SpecialOutfitKey;
 
-        public OutfitAssignment(SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceCallbackTypes entryCallbackType, InteractionInstanceCallbackTypes exitCallbackType)
+        public OutfitAssignment(SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceTypeUtils.CallbackTypes entryCallbackType, InteractionInstanceTypeUtils.CallbackTypes exitCallbackType)
         {
             EntryCallbackType = entryCallbackType;
             ExitCallbackType = exitCallbackType;
@@ -31,7 +31,7 @@ namespace Destrospean.OutfitAssignment
             SpecialOutfitKey = specialOutfitKey;
         }
 
-        public static void AssignOutfitToInteraction(SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceCallbackTypes entryCallbackType, InteractionInstanceCallbackTypes exitCallbackType)
+        public static void AssignOutfitToInteraction(SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceTypeUtils.CallbackTypes entryCallbackType, InteractionInstanceTypeUtils.CallbackTypes exitCallbackType)
         {
             UnassignOutfitToInteraction(simDescription, interactionInstanceType);
             OutfitAssignments.Add(new OutfitAssignment(simDescription, specialOutfitKey, interactionInstanceType, entryCallbackType, exitCallbackType));

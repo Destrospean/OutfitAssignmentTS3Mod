@@ -11,7 +11,7 @@ namespace Destrospean.OutfitAssignment
     {
         static Main()
         {
-            Common.InitInteractionInstanceTypes();
+            InteractionInstanceTypeUtils.InitInteractionInstanceTypes();
             EventListener simDescriptionDisposedListener = null,
             simInstantiatedListener = null;
             World.sOnWorldLoadFinishedEventHandler += (sender, e) =>
@@ -60,40 +60,40 @@ namespace Destrospean.OutfitAssignment
                     simDescriptionDisposedListener = null;
                     simInstantiatedListener = null;
                 };
-            InteractionInstanceAdditions.OnInteractedStarted += (interaction) =>
+            InteractionInstanceAdditions.OnInteractedStarted += (interactionInstance) =>
                 {
                     OutfitAssignment outfitAssignment;
-                    if (OutfitAssignment.TryGetOutfitAssignment(interaction.InstanceActor.SimDescription, interaction, out outfitAssignment) && outfitAssignment.EntryCallbackType == InteractionInstanceCallbackTypes.InteractionStarted)
+                    if (OutfitAssignment.TryGetOutfitAssignment(interactionInstance.InstanceActor.SimDescription, interactionInstance, out outfitAssignment) && outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted)
                     {
-                        outfitAssignment.PreviousOutfitCategory = interaction.InstanceActor.CurrentOutfitCategory;
-                        outfitAssignment.PreviousOutfitIndex = interaction.InstanceActor.CurrentOutfitIndex;
-                        interaction.InstanceActor.SwitchToOutfitWithSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                        outfitAssignment.PreviousOutfitCategory = interactionInstance.InstanceActor.CurrentOutfitCategory;
+                        outfitAssignment.PreviousOutfitIndex = interactionInstance.InstanceActor.CurrentOutfitIndex;
+                        interactionInstance.InstanceActor.SwitchToOutfitWithSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
                     }
                 };
-            InteractionInstanceAdditions.OnInteractionEnded += (interaction) =>
+            InteractionInstanceAdditions.OnInteractionEnded += (interactionInstance) =>
                 {
                     OutfitAssignment outfitAssignment;
-                    if (OutfitAssignment.TryGetOutfitAssignment(interaction.InstanceActor.SimDescription, interaction, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceCallbackTypes.InteractionEnded)
+                    if (OutfitAssignment.TryGetOutfitAssignment(interactionInstance.InstanceActor.SimDescription, interactionInstance, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
                     {
-                        interaction.InstanceActor.SwitchToOutfitWithSpin(outfitAssignment.PreviousOutfitCategory, outfitAssignment.PreviousOutfitIndex);
+                        interactionInstance.InstanceActor.SwitchToOutfitWithSpin(outfitAssignment.PreviousOutfitCategory, outfitAssignment.PreviousOutfitIndex);
                     }
                 };
-            InteractionInstanceAdditions.StandardEntryPreCallCallback += (interaction) =>
+            InteractionInstanceAdditions.StandardEntryPreCallCallback += (interactionInstance) =>
                 {
                     OutfitAssignment outfitAssignment;
-                    if (OutfitAssignment.TryGetOutfitAssignment(interaction.InstanceActor.SimDescription, interaction, out outfitAssignment) && outfitAssignment.EntryCallbackType == InteractionInstanceCallbackTypes.StandardEntry)
+                    if (OutfitAssignment.TryGetOutfitAssignment(interactionInstance.InstanceActor.SimDescription, interactionInstance, out outfitAssignment) && outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardEntry)
                     {
-                        outfitAssignment.PreviousOutfitCategory = interaction.InstanceActor.CurrentOutfitCategory;
-                        outfitAssignment.PreviousOutfitIndex = interaction.InstanceActor.CurrentOutfitIndex;
-                        interaction.InstanceActor.SwitchToOutfitWithSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                        outfitAssignment.PreviousOutfitCategory = interactionInstance.InstanceActor.CurrentOutfitCategory;
+                        outfitAssignment.PreviousOutfitIndex = interactionInstance.InstanceActor.CurrentOutfitIndex;
+                        interactionInstance.InstanceActor.SwitchToOutfitWithSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
                     }
                 };
-            InteractionInstanceAdditions.StandardExitPostCallCallback += (interaction) =>
+            InteractionInstanceAdditions.StandardExitPostCallCallback += (interactionInstance) =>
                 {
                     OutfitAssignment outfitAssignment;
-                    if (OutfitAssignment.TryGetOutfitAssignment(interaction.InstanceActor.SimDescription, interaction, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceCallbackTypes.StandardExit)
+                    if (OutfitAssignment.TryGetOutfitAssignment(interactionInstance.InstanceActor.SimDescription, interactionInstance, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardExit)
                     {
-                        interaction.InstanceActor.SwitchToOutfitWithSpin(outfitAssignment.PreviousOutfitCategory, outfitAssignment.PreviousOutfitIndex);
+                        interactionInstance.InstanceActor.SwitchToOutfitWithSpin(outfitAssignment.PreviousOutfitCategory, outfitAssignment.PreviousOutfitIndex);
                     }
                 };
         }

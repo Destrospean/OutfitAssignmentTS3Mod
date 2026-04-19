@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.Autonomy;
 using Sims3.Gameplay.Interactions;
-using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
 
 namespace Destrospean.OutfitAssignment
 {
@@ -44,61 +43,61 @@ namespace Destrospean.OutfitAssignment
                 }
             }
 
-            protected static bool TryGetEntryCallbackType(Sim target, out InteractionInstanceCallbackTypes? callbackType)
+            protected static bool TryGetEntryCallbackType(Sim target, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
             {
                 string localizationKey = "/Dialogs/EntryCallbackTypeDialog",
                 text = Dialogs.ComboSelectionDialog.Show(entries: new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionStarted"),
-                            InteractionInstanceCallbackTypes.InteractionStarted.ToString()
+                            InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()
                         },
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:StandardEntry"),
-                            InteractionInstanceCallbackTypes.StandardEntry.ToString()
+                            InteractionInstanceTypeUtils.CallbackTypes.StandardEntry.ToString()
                         }
-                    }, titleText: Common.Localize(target.IsFemale, localizationKey + ":Title"), defaultEntry: InteractionInstanceCallbackTypes.InteractionStarted.ToString()) as string;
+                    }, title: Common.Localize(target.IsFemale, localizationKey + ":Title"), defaultEntry: InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()) as string;
                 if (text == null)
                 {
                     callbackType = null;
                     return false;
                 }
-                callbackType = (InteractionInstanceCallbackTypes)Enum.Parse(typeof(InteractionInstanceCallbackTypes), text);
+                callbackType = (InteractionInstanceTypeUtils.CallbackTypes)Enum.Parse(typeof(InteractionInstanceTypeUtils.CallbackTypes), text);
                 return true;
             }
 
-            protected static bool TryGetExitCallbackType(Sim target, out InteractionInstanceCallbackTypes? callbackType)
+            protected static bool TryGetExitCallbackType(Sim target, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
             {
                 string localizationKey = "/Dialogs/ExitCallbackTypeDialog",
                 text = Dialogs.ComboSelectionDialog.Show(entries: new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionEnded"),
-                            InteractionInstanceCallbackTypes.InteractionEnded.ToString()
+                            InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()
                         },
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:StandardExit"),
-                            InteractionInstanceCallbackTypes.StandardExit.ToString()
+                            InteractionInstanceTypeUtils.CallbackTypes.StandardExit.ToString()
                         },
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:Never"),
-                            InteractionInstanceCallbackTypes.Never.ToString()
+                            InteractionInstanceTypeUtils.CallbackTypes.Never.ToString()
                         }
-                    }, titleText: Common.Localize(target.IsFemale, localizationKey + ":Title"), defaultEntry: InteractionInstanceCallbackTypes.InteractionEnded.ToString()) as string;
+                    }, title: Common.Localize(target.IsFemale, localizationKey + ":Title"), defaultEntry: InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()) as string;
                 if (text == null)
                 {
                     callbackType = null;
                     return false;
                 }
-                callbackType = (InteractionInstanceCallbackTypes)Enum.Parse(typeof(InteractionInstanceCallbackTypes), text);
+                callbackType = (InteractionInstanceTypeUtils.CallbackTypes)Enum.Parse(typeof(InteractionInstanceTypeUtils.CallbackTypes), text);
                 return true;
             }
 
             public override bool Run()
             {
                 Type[] interactionInstanceTypes;
-                InteractionInstanceCallbackTypes? entryCallbackType, exitCallbackType;
-                if (Common.TryGetInteractionInstanceTypes(out interactionInstanceTypes) && TryGetEntryCallbackType(Target, out entryCallbackType) && TryGetExitCallbackType(Target, out exitCallbackType))
+                InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out interactionInstanceTypes) && TryGetEntryCallbackType(Target, out entryCallbackType) && TryGetExitCallbackType(Target, out exitCallbackType))
                 {
                     string specialOutfitKey = "";
                     foreach (Type interactionInstanceType in interactionInstanceTypes)
@@ -162,7 +161,7 @@ namespace Destrospean.OutfitAssignment
             public override bool Run()
             {
                 Type[] interactionInstanceTypes;
-                if (Common.TryGetInteractionInstanceTypes(out interactionInstanceTypes, Array.ConvertAll(OutfitAssignment.GetAllOutfitAssignments(Target.SimDescription), x => x.InteractionInstanceType)))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out interactionInstanceTypes, Array.ConvertAll(OutfitAssignment.GetAllOutfitAssignments(Target.SimDescription), x => x.InteractionInstanceType)))
                 {
                     foreach (Type interactionInstanceType in interactionInstanceTypes)
                     {

@@ -97,7 +97,7 @@ namespace Destrospean.OutfitAssignment
             {
                 return simDescription.GetSpecialOutfit(specialOutfitKey).Key;
             }
-            ResourceKey key = OutfitUtils.ApplyUniformToOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), new SimOutfit(uniformKey), simDescription, "CreateAndAddTempOutfit");
+            ResourceKey key = OutfitUtils.ApplyUniformToOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), new SimOutfit(uniformKey), simDescription, "CreateAndAddSpecialOutfit");
             simDescription.AddSpecialOutfit(new SimOutfit(key), specialOutfitKey);
             return key;
         }

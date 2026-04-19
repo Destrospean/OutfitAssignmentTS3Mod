@@ -56,8 +56,8 @@
     <Compile Include="ExtensionAttribute.cs" />
     <Compile Include="OutfitExtensions.cs" />
     <Compile Include="Dialogs.cs" />
-    <Compile Include="InteractionInstanceCallbackTypes.cs" />
     <Compile Include="OutfitAssignment.cs" />
+    <Compile Include="InteractionInstanceTypeUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib">

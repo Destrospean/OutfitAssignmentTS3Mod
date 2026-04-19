@@ -34,12 +34,12 @@ namespace Destrospean.OutfitAssignment.MasterController
 
             public override bool Run()
             {
-                System.Type[] interactionInstanceTypes;
-                InteractionInstanceCallbackTypes? entryCallbackType, exitCallbackType;
-                if (Common.TryGetInteractionInstanceTypes(out interactionInstanceTypes) && TryGetEntryCallbackType(Target, out entryCallbackType) && TryGetExitCallbackType(Target, out exitCallbackType))
+                System.Type[] selectedInteractionInstanceTypes;
+                InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes) && TryGetEntryCallbackType(Target, out entryCallbackType) && TryGetExitCallbackType(Target, out exitCallbackType))
                 {
                     string specialOutfitKey = "";
-                    foreach (System.Type interactionInstanceType in interactionInstanceTypes)
+                    foreach (System.Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
                         OutfitAssignment outfitAssignment;
                         if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
@@ -56,7 +56,7 @@ namespace Destrospean.OutfitAssignment.MasterController
                     bool outfitIsPreexisting = Actor.SimDescription.HasSpecialOutfit(specialOutfitKey);
                     if (EditSpecialOutfit(Actor, specialOutfitKey))
                     {
-                        foreach (System.Type interactionInstanceType in interactionInstanceTypes)
+                        foreach (System.Type interactionInstanceType in selectedInteractionInstanceTypes)
                         {
                             OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                         }

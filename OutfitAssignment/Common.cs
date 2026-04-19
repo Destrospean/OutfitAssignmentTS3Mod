@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Sims3.Gameplay.Autonomy;
 using Sims3.Gameplay.CAS;
 using Sims3.Gameplay.Utilities;
@@ -10,34 +9,6 @@ namespace Destrospean.OutfitAssignment
     public static class Common
     {
         internal const string kLocalizationPath = "Destrospean/OutfitAssignment";
-
-        static Type[] sInteractionInstanceTypes;
-
-        public static Type[] InteractionInstanceTypes
-        {
-            get
-            {
-                if (sInteractionInstanceTypes == null)
-                {
-                    InitInteractionInstanceTypes();
-                }
-                return sInteractionInstanceTypes;
-            }
-        }
-
-        class InteractionInstanceTypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>
-        {
-            const string sLocalizationKey = kLocalizationPath + "/Dialogs/InteractionListDialog";
-
-            public InteractionInstanceTypeColumn() : base(sLocalizationKey + "/Header:Text", sLocalizationKey + "/Header:Tooltip", 40)
-            {
-            }
-
-            public override ObjectPicker.ColumnInfo GetValue(Type interactionInstanceType)
-            {
-                return new ObjectPicker.TextColumn(interactionInstanceType == null ? "" : interactionInstanceType.FullName);
-            }
-        }
 
         public static void CopyTuning(Type baseType, Type oldType, Type newType)
         {
@@ -50,16 +21,6 @@ namespace Destrospean.OutfitAssignment
                 }
             }
             InteractionObjectPair.sTuningCache.Remove(new Pair<Type, Type>(newType, baseType));
-        }
-
-        public static void InitInteractionInstanceTypes()
-        {
-            List<Type> interactionInstanceTypes = new List<Type>();
-            foreach (System.Reflection.Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                interactionInstanceTypes.AddRange(Array.FindAll(assembly.GetTypes(), x => typeof(Sims3.Gameplay.Interactions.InteractionInstance).IsAssignableFrom(x) && x.IsClass && !x.IsAbstract));
-            }
-            sInteractionInstanceTypes = interactionInstanceTypes.ToArray();
         }
 
         public static string Localize(string entryKey)
@@ -106,35 +67,6 @@ namespace Destrospean.OutfitAssignment
             else
             {
                 StyledNotification.Show(new StyledNotification.Format(message, style));
-            }
-        }
-
-        public static bool TryGetInteractionInstanceTypes(out Type[] interactionInstanceTypes, Type[] allInteractionInstanceTypes = null)
-        {
-            try
-            {
-                string localizationKey = "/Dialogs/InteractionListDialog";
-                bool okayed;
-                List<Type> selected = Dialogs.ObjectPickerDialog.Show(Localize(localizationKey + ":Title"), new List<ObjectPicker.TabInfo>
-                    {
-                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), new List<Type>(allInteractionInstanceTypes ?? InteractionInstanceTypes).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
-                    }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
-                    {
-                        new InteractionInstanceTypeColumn()
-                    }, int.MaxValue, out okayed);
-                if (okayed)
-                {
-                    interactionInstanceTypes = selected.ToArray();
-                    return true;
-                }
-                interactionInstanceTypes = null;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                ((Sims3.SimIFace.IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
-                interactionInstanceTypes = null;
-                return false;
             }
         }
     }

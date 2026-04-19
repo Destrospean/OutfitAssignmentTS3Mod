@@ -9,15 +9,15 @@ namespace Destrospean.OutfitAssignment
     {
         public class ComboSelectionDialog : ModalDialog
         {
-            public const string kLayoutName = "ComboSelectionDialog";
+            const string kLayoutName = "ComboSelectionDialog";
 
-            public const int kWinExportID = 4096;
+            const int kWinExportID = 4096;
 
-            public Button mCancelButton, mOkButton;
+            Button mCancelButton, mOkButton;
 
-            public ComboBox mCombo;
+            ComboBox mCombo;
 
-            public object mResult;
+            object mResult;
 
             public object Result
             {
@@ -35,7 +35,7 @@ namespace Destrospean.OutfitAssignment
                 kTitleTextID
             }
 
-            public ComboSelectionDialog(string titleText, IDictionary<string, object> entries, object defaultEntry, Vector2 position, PauseMode pauseMode) : base(kLayoutName, kWinExportID, true, pauseMode, null)
+            public ComboSelectionDialog(string title, IDictionary<string, object> entries, object defaultEntry, Vector2 position, PauseMode pauseMode) : base(kLayoutName, kWinExportID, true, pauseMode, null)
             {
                 if (mModalDialogWindow == null)
                 {
@@ -44,30 +44,25 @@ namespace Destrospean.OutfitAssignment
                 Text text = mModalDialogWindow.GetChildByID(5, true) as Text;
                 if (text != null)
                 {
-                    text.Caption = titleText;
+                    text.Caption = title;
                 }
-                mCombo = mModalDialogWindow.GetChildByID(2, true) as ComboBox;
+                mCombo = (ComboBox)mModalDialogWindow.GetChildByID(2, true);
                 foreach (KeyValuePair<string, object> entry in entries)
                 {
                     mCombo.ValueList.Add(entry.Key, entry.Value);
-                    if (entry.Value as string == defaultEntry as string)
+                    if (entry.Value == defaultEntry)
                     {
                         mCombo.CurrentSelection = (uint)(mCombo.ValueList.Count - 1);
                     }
                 }
-                Rect area = mModalDialogWindow.Area;
-                float height = area.BottomRight.y - area.TopLeft.y,
-                width = area.BottomRight.x - area.TopLeft.x,
-                x = position.x,
+                float x = position.x,
                 y = position.y;
                 if (x < 0 && y < 0)
                 {
-                    Rect parentArea = mModalDialogWindow.Parent.Area;
-                    x = (float)Math.Round((parentArea.BottomRight.x - parentArea.TopLeft.x - width) / 2);
-                    y = (float)Math.Round((parentArea.BottomRight.y - parentArea.TopLeft.y - height) / 2);
+                    x = (float)Math.Round((mModalDialogWindow.Parent.Area.Width - mModalDialogWindow.Area.Width) / 2);
+                    y = (float)Math.Round((mModalDialogWindow.Parent.Area.Height - mModalDialogWindow.Area.Height) / 2);
                 }
-                area.Set(x, y, x + width, y + height);
-                mModalDialogWindow.Area = area;
+                mModalDialogWindow.Area = new Rect(x, y, x + mModalDialogWindow.Area.Width, y + mModalDialogWindow.Area.Height);
                 mOkButton = mModalDialogWindow.GetChildByID(3, false) as Button;
                 if (mOkButton != null)
                 {
@@ -91,27 +86,20 @@ namespace Destrospean.OutfitAssignment
 
             public override bool OnEnd(uint buttonID)
             {
-                if (buttonID == 3)
-                {
-                    mResult = mCombo.EntryTags[(int)mCombo.CurrentSelection];
-                }
-                else
-                {
-                    mResult = null;
-                }
+                mResult = buttonID == 3 ? mCombo.EntryTags[(int)mCombo.CurrentSelection] : null;
                 return true;
             }
 
-            public static object Show(string titleText, IDictionary<string, object> entries, object defaultEntry)
+            public static object Show(string title, IDictionary<string, object> entries, object defaultEntry)
             {
-                return Show(titleText, entries, defaultEntry, new Vector2(-1, -1), PauseMode.PauseSimulator);
+                return Show(title, entries, defaultEntry, new Vector2(-1, -1), PauseMode.PauseSimulator);
             }
 
-            public static object Show(string titleText, IDictionary<string, object> entries, object defaultEntry, Vector2 position, PauseMode pauseMode)
+            public static object Show(string title, IDictionary<string, object> entries, object defaultEntry, Vector2 position, PauseMode pauseMode)
             {
                 if (EnableModalDialogs)
                 {
-                    using (ComboSelectionDialog comboSelectionDialog = new ComboSelectionDialog(titleText, entries, defaultEntry, position, pauseMode))
+                    using (ComboSelectionDialog comboSelectionDialog = new ComboSelectionDialog(title, entries, defaultEntry, position, pauseMode))
                     {
                         comboSelectionDialog.StartModal();
                         return comboSelectionDialog.Result;
@@ -151,91 +139,74 @@ namespace Destrospean.OutfitAssignment
                     }
                 }
 
-                public CommonHeaderInfo(string headerKey, string toolTipKey, int width) : base(headerKey, toolTipKey, width)
+                public CommonHeaderInfo(string headerKey, string tooltipKey, int width) : base(headerKey, tooltipKey, width)
                 {
                 }
 
-                public CommonHeaderInfo(string headerKey, string toolTipKey, int width, bool textIsImage) : base(headerKey, toolTipKey, width, textIsImage)
+                public CommonHeaderInfo(string headerKey, string tooltipKey, int width, bool textIsImage) : base(headerKey, tooltipKey, width, textIsImage)
                 {
                 }
 
                 public abstract ObjectPicker.ColumnInfo GetValue(T item);
             }
 
-            public ObjectPickerDialog(string title, List<ObjectPicker.TabInfo> listObjs, List<ObjectPicker.HeaderInfo> headers, int numSelectableRows, List<ObjectPicker.RowInfo> preSelectedRows) : base("UiObjectPicker", 1, true, PauseMode.PauseSimulator, null)
+            public ObjectPickerDialog(string title, List<ObjectPicker.TabInfo> tabs, List<ObjectPicker.HeaderInfo> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows) : base("UiObjectPicker", 1, true, PauseMode.PauseSimulator, null)
             {
                 if (mModalDialogWindow == null)
                 {
                     return;
                 }
-                Rect area = mModalDialogWindow.Area;
-                area.mBottomRight.x += 200;
-                mModalDialogWindow.Area = area;
-                Text text = mModalDialogWindow.GetChildByID(99576787, false) as Text;
-                text.Caption = title;
-                mTable = mModalDialogWindow.GetChildByID(99576784, false) as ObjectPicker;
-                TableContainer objectTable = mTable.ObjectTable;
-                objectTable.TableChanged += OnTableChanged;
-                ObjectPicker objectPicker0 = mTable,
-                objectPicker1 = mTable;
-                objectPicker0.SelectionChanged += OnSelectionChanged;
-                objectPicker1.RowSelected += OnSelectionChanged;
+                mModalDialogWindow.Area = new Rect(new Vector2(mModalDialogWindow.Area.TopLeft.x, mModalDialogWindow.Area.TopLeft.y), new Vector2(mModalDialogWindow.Area.BottomRight.x + 200, mModalDialogWindow.Area.BottomRight.y));
+                ((Text)mModalDialogWindow.GetChildByID(99576787, false)).Caption = title;
+                mTable = (ObjectPicker)mModalDialogWindow.GetChildByID(99576784, false);
+                mTable.ObjectTable.TableChanged += OnTableChanged;
+                mTable.SelectionChanged += OnSelectionChanged;
+                mTable.RowSelected += OnSelectionChanged;
                 mTable.mViewButton.Visible = false;
-                TableContainer tableContainer = mTable.mTable;
-                tableContainer.mPopulationCompletedCallback += OnComplete;
-                area = mTable.Area;
-                area.mBottomRight.x += 200;
-                mTable.Area = area;
-                mOkayButton = mModalDialogWindow.GetChildByID(99576785, false) as Button;
+                mTable.mTable.mPopulationCompletedCallback += OnComplete;
+                mTable.Area = new Rect(new Vector2(mTable.Area.TopLeft.x, mTable.Area.TopLeft.y), new Vector2(mTable.Area.BottomRight.x + 200, mTable.Area.BottomRight.y));
+                mOkayButton = (Button)mModalDialogWindow.GetChildByID(99576785, false);
                 mOkayButton.TooltipText = Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/Global:Accept");
                 mOkayButton.Enabled = true;
                 mOkayButton.Click += OnOkayButtonClick;
                 OkayID = mOkayButton.ID;
                 SelectedID = mOkayButton.ID;
-                Button button = mModalDialogWindow.GetChildByID(99576786, false) as Button;
+                Button button = (Button)mModalDialogWindow.GetChildByID(99576786, false);
                 button.TooltipText = Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:Cancel");
                 button.Click += OnCloseButtonClick;
                 CancelID = button.ID;
                 mTableOffset = mModalDialogWindow.Area.BottomRight - mModalDialogWindow.Area.TopLeft - (mTable.Area.BottomRight - mTable.Area.TopLeft);
-                mTable.Populate(listObjs, headers, numSelectableRows);
-                TabContainer tabs0 = mTable.mTabs,
-                tabs1 = mTable.mTabs;
-                tabs0.TabSelect -= mTable.OnTabSelect;
-                tabs1.TabSelect += OnTabSelect;
+                mTable.Populate(tabs, headers, selectableRowCount);
+                mTable.mTabs.TabSelect -= mTable.OnTabSelect;
+                mTable.mTabs.TabSelect += OnTabSelect;
                 mTable.ViewTypeToggle = true;
                 mTable.Selected = preSelectedRows;
                 ResizeWindow(true);
             }
 
-            void ResizeWindow(bool center)
+            void OnCloseButtonClick(WindowBase sender, UIButtonClickEventArgs eventArgs)
             {
-                Rect area = mModalDialogWindow.Parent.Area;
-                float width = area.Width;
-                float height = area.Height;
-                int num = (int)height - (int)(mTableOffset.y * 2);
-                num /= (int)mTable.mTable.RowHeight;
-                if (num > mTable.mTable.NumberRows)
+                eventArgs.Handled = true;
+                EndDialog(CancelID);
+            }
+
+            void OnOkayButtonClick(WindowBase sender, UIButtonClickEventArgs eventArgs)
+            {
+                eventArgs.Handled = true;
+                EndDialog(OkayID);
+            }
+
+            void OnSelectionChanged(List<ObjectPicker.RowInfo> selectedRows)
+            {
+                Audio.StartSound("ui_tertiary_button");
+                OnTableChanged();
+            }
+
+            void OnTableChanged()
+            {
+                if (mTable.ObjectTable.SelectedItem > -1 && mTable.ObjectTable.GetRow(mTable.ObjectTable.SelectedItem) != null && mTable.mTable.NumSelectableRows == 1)
                 {
-                    num = mTable.mTable.NumberRows;
-                }
-                mTable.mTable.VisibleRows = (uint)num;
-                mTable.mTable.GridSizeDirty = true;
-                mTable.OnPopulationComplete();
-                mModalDialogWindow.Area = new Rect(mModalDialogWindow.Area.TopLeft, mModalDialogWindow.Area.TopLeft + mTable.TableArea.BottomRight + mTableOffset);
-                if (center)
-                {
-                    Rect area1 = mModalDialogWindow.Area;
-                    float w = area1.Width, 
-                    h = area1.Height,
-                    x = (float)Math.Round((width - w) / 2),
-                    y = (float)Math.Round((height - h) / 2);
-                    area1.Set(x, y, x + w, y + h);
-                    mModalDialogWindow.Area = area1;
-                    Text text = mModalDialogWindow.GetChildByID(99576787, false) as Text;
-                    Rect area2 = text.Area;
-                    area2.Set(area2.TopLeft.x, 20, area2.BottomRight.x, 50 - area1.Height);
-                    text.Area = area2;
-                    mModalDialogWindow.Visible = true;
+                    EndDialog(OkayID);
                 }
             }
 
@@ -243,25 +214,42 @@ namespace Destrospean.OutfitAssignment
             {
                 try
                 {
-                    int num = (int)newTab.Tag;
-                    if (mTable.mSortedTab != num)
+                    if (mTable.mSortedTab == (int)newTab.Tag)
                     {
-                        mTable.mSortedTab = num;
-                        mTable.mSortText.Caption = mTable.mItems[mTable.mSortedTab].TabText;
-                        TableContainer tableContainer0 = mTable.mTable,
-                        tableContainer1 = mTable.mTable;
-                        tableContainer0.mPopulationCompletedCallback += mTable.OnPopulationComplete;
-                        tableContainer1.mPopulationCompletedCallback += OnComplete;
-                        if (mTable.RepopulateTable())
-                        {
-                            OnComplete();
-                        }
+                        return;
+                    }
+                    mTable.mSortedTab = (int)newTab.Tag;
+                    mTable.mSortText.Caption = mTable.mItems[mTable.mSortedTab].TabText;
+                    mTable.mTable.mPopulationCompletedCallback += mTable.OnPopulationComplete;
+                    mTable.mTable.mPopulationCompletedCallback += OnComplete;
+                    if (mTable.RepopulateTable())
+                    {
+                        OnComplete();
                     }
                 }
                 catch (Exception ex)
                 {
                     ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                 }
+            }
+
+            void ResizeWindow(bool center)
+            {
+                uint rowCount = ((uint)mModalDialogWindow.Parent.Area.Height - (uint)(mTableOffset.y * 2)) / (uint)mTable.mTable.RowHeight;
+                mTable.mTable.VisibleRows = rowCount > mTable.mTable.NumberRows ? (uint)mTable.mTable.NumberRows : rowCount;
+                mTable.mTable.GridSizeDirty = true;
+                mTable.OnPopulationComplete();
+                mModalDialogWindow.Area = new Rect(mModalDialogWindow.Area.TopLeft, mModalDialogWindow.Area.TopLeft + mTable.TableArea.BottomRight + mTableOffset);
+                if (!center)
+                {
+                    return;
+                }
+                float x = (float)Math.Round((mModalDialogWindow.Parent.Area.Width - mModalDialogWindow.Area.Width) / 2),
+                y = (float)Math.Round((mModalDialogWindow.Parent.Area.Height - mModalDialogWindow.Area.Height) / 2);
+                mModalDialogWindow.Area = new Rect(x, y, x + mModalDialogWindow.Area.Width, y + mModalDialogWindow.Area.Height);
+                Text text = (Text)mModalDialogWindow.GetChildByID(99576787, false);
+                text.Area = new Rect(text.Area.TopLeft.x, 20, text.Area.BottomRight.x, 50 - mModalDialogWindow.Area.Height);
+                mModalDialogWindow.Visible = true;
             }
 
             public void OnComplete()
@@ -274,12 +262,6 @@ namespace Destrospean.OutfitAssignment
                 {
                     ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                 }
-            }
-
-            void OnCloseButtonClick(WindowBase sender, UIButtonClickEventArgs eventArgs)
-            {
-                eventArgs.Handled = true;
-                EndDialog(CancelID);
             }
 
             public override bool OnEnd(uint endID)
@@ -302,85 +284,59 @@ namespace Destrospean.OutfitAssignment
                 return true;
             }
 
-            void OnOkayButtonClick(WindowBase sender, UIButtonClickEventArgs eventArgs)
-            {
-                eventArgs.Handled = true;
-                EndDialog(OkayID);
-            }
-
-            void OnSelectionChanged(List<ObjectPicker.RowInfo> selectedRows)
-            {
-                Audio.StartSound("ui_tertiary_button");
-                OnTableChanged();
-            }
-
-            void OnTableChanged()
-            {
-                int selectedItem = mTable.ObjectTable.SelectedItem;
-                if (selectedItem >= 0 && mTable.ObjectTable.GetRow(selectedItem) != null && mTable.mTable.NumSelectableRows == 1)
-                {
-                    EndDialog(OkayID);
-                }
-            }
-
-            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> listObjs, List<CommonHeaderInfo<T>> headers, int numSelectableRows, out bool okayed) where T : class
+            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<CommonHeaderInfo<T>> headers, int selectableRowCount, out bool confirmed) where T : class
             {
                 List<ObjectPicker.RowInfo> preSelectedRows = null;
-                return Show(title, listObjs, headers, numSelectableRows, preSelectedRows, out okayed);
+                return Show(title, tabs, headers, selectableRowCount, preSelectedRows, out confirmed);
             }
 
-            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabInfo, List<CommonHeaderInfo<T>> paramHeaders, int numSelectableRows, List<ObjectPicker.RowInfo> preSelectedRows, out bool okayed) where T : class
+            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<CommonHeaderInfo<T>> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows, out bool confirmed) where T : class
             {
                 Simulator.Sleep(0);
-                Dictionary<List<ObjectPicker.ColumnInfo>, bool> dictionary = new Dictionary<List<ObjectPicker.ColumnInfo>, bool>();
-                foreach (ObjectPicker.TabInfo item in tabInfo)
+                List<List<ObjectPicker.ColumnInfo>> columnInfoLists = new List<List<ObjectPicker.ColumnInfo>>();
+                foreach (ObjectPicker.TabInfo tabInfo in tabs)
                 {
-                    foreach (ObjectPicker.RowInfo subItem in item.RowInfo)
+                    foreach (ObjectPicker.RowInfo rowInfo in tabInfo.RowInfo)
                     {
-                        if (dictionary.ContainsKey(subItem.ColumnInfo))
+                        if (columnInfoLists.Contains(rowInfo.ColumnInfo))
                         {
                             continue;
                         }
-                        dictionary.Add(subItem.ColumnInfo, true);
-                        foreach (CommonHeaderInfo<T> paramHeader in paramHeaders)
+                        columnInfoLists.Add(rowInfo.ColumnInfo);
+                        foreach (CommonHeaderInfo<T> headerInfo in headers)
                         {
-                            ObjectPicker.ColumnInfo columnInfo = paramHeader.GetValue(subItem.Item as T);
+                            ObjectPicker.ColumnInfo columnInfo = headerInfo.GetValue(rowInfo.Item as T);
                             if (columnInfo == null)
                             {
-                                if (paramHeader.IsStub)
+                                if (headerInfo.IsStub)
                                 {
                                     continue;
                                 }
                                 columnInfo = new ObjectPicker.TextColumn("");
                             }
-                            subItem.ColumnInfo.Add(columnInfo);
+                            rowInfo.ColumnInfo.Add(columnInfo);
                         }
                     }
                 }
-                List<ObjectPicker.HeaderInfo> list = new List<ObjectPicker.HeaderInfo>();
-                foreach (CommonHeaderInfo<T> paramHeader in paramHeaders)
-                {
-                    list.Add(paramHeader);
-                }
-                return Show<T>(title, tabInfo, list, numSelectableRows, preSelectedRows, out okayed);
+                return Show<T>(title, tabs, headers.ConvertAll(x => (ObjectPicker.HeaderInfo)x), selectableRowCount, preSelectedRows, out confirmed);
             }
 
-            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabInfo, List<ObjectPicker.HeaderInfo> headers, int numSelectableRows, List<ObjectPicker.RowInfo> preSelectedRows, out bool okayed) where T : class
+            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<ObjectPicker.HeaderInfo> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows, out bool confirmed) where T : class
             {
-                using (ObjectPickerDialog objectPickerDialog = new ObjectPickerDialog(title, tabInfo, headers, numSelectableRows, preSelectedRows))
+                using (ObjectPickerDialog objectPickerDialog = new ObjectPickerDialog(title, tabs, headers, selectableRowCount, preSelectedRows))
                 {
                     objectPickerDialog.StartModal();
-                    okayed = objectPickerDialog.mWasOkay;
+                    confirmed = objectPickerDialog.mWasOkay;
                     if (objectPickerDialog.Result == null || objectPickerDialog.Result.Count == 0)
                     {
                         return null;
                     }
-                    List<T> list = new List<T>();
-                    foreach (ObjectPicker.RowInfo item in objectPickerDialog.Result)
+                    List<T> results = new List<T>();
+                    foreach (ObjectPicker.RowInfo rowInfo in objectPickerDialog.Result)
                     {
-                        list.Add(item.Item as T);
+                        results.Add(rowInfo.Item as T);
                     }
-                    return list;
+                    return results;
                 }
             }
         }
