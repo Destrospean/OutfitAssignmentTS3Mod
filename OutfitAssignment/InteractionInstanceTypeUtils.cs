@@ -27,7 +27,10 @@ namespace Destrospean.OutfitAssignment
             InteractionStarted,
             InteractionEnded,
             StandardEntry,
-            StandardExit
+            StandardExit,
+            SyncLevelRouted,
+            SyncLevelCommitted,
+            SyncLevelCompleted
         }
 
         class TextColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>
@@ -64,7 +67,7 @@ namespace Destrospean.OutfitAssignment
             sInteractionInstanceTypes = interactionInstanceTypes.ToArray();
         }
 
-        public static bool TryGetSelectedInteractionInstanceTypes(out Type[] selectedInteractionInstanceTypes, Type[] allInteractionInstanceTypes = null)
+        public static bool TryGetSelectedInteractionInstanceTypes(out Type[] selectedInteractionInstanceTypes, Type[] allInteractionInstanceTypes = null, string namespaceListTitle = null, string interactionListTitle = null)
         {
             try
             {
@@ -81,7 +84,7 @@ namespace Destrospean.OutfitAssignment
                     }
                 }
                 bool confirmed;
-                List<string> selectedNamespaces = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(namespaceListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                List<string> selectedNamespaces = Dialogs.ObjectPickerDialog.Show(namespaceListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(namespaceListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
                     {
                         new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), namespaces.ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
                     }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>>
@@ -93,7 +96,7 @@ namespace Destrospean.OutfitAssignment
                     selectedInteractionInstanceTypes = null;
                     return false;
                 }
-                selectedInteractionInstanceTypes = (Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(interactionListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                selectedInteractionInstanceTypes = (Dialogs.ObjectPickerDialog.Show(interactionListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(interactionListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
                     {
                         new ObjectPicker.TabInfo("shop_all_r2", selectedNamespaces[0], new List<Type>(allInteractionInstanceTypes).FindAll(x => x.Namespace == selectedNamespaces[0]).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
                     }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
@@ -102,7 +105,7 @@ namespace Destrospean.OutfitAssignment
                     }, int.MaxValue, out confirmed) ?? new List<Type>()).ToArray();
                 if (!confirmed || selectedInteractionInstanceTypes.Length == 0)
                 {
-                    return TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, allInteractionInstanceTypes);
+                    return TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, allInteractionInstanceTypes, namespaceListTitle, interactionListTitle);
                 }
                 return true;
             }

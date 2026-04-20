@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Sims3.Gameplay.CAS;
+using Sims3.SimIFace.CAS;
 
 namespace Destrospean.OutfitAssignment
 {
@@ -9,24 +10,22 @@ namespace Destrospean.OutfitAssignment
     {
         public readonly InteractionInstanceTypeUtils.CallbackTypes EntryCallbackType, ExitCallbackType;
 
-        public readonly Type InteractionInstanceType;
+        public readonly string InteractionInstanceType, SpecialOutfitKey;
 
         [Sims3.SimIFace.PersistableStatic(true)]
         public static readonly List<OutfitAssignment> OutfitAssignments = new List<OutfitAssignment>();
 
-        public Sims3.SimIFace.CAS.OutfitCategories PreviousOutfitCategory = Sims3.SimIFace.CAS.OutfitCategories.Everyday;
+        public OutfitCategories PreviousOutfitCategory = OutfitCategories.Everyday;
 
         public int PreviousOutfitIndex = 0;
 
         public readonly SimDescription SimDescription;
 
-        public readonly string SpecialOutfitKey;
-
         public OutfitAssignment(SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceTypeUtils.CallbackTypes entryCallbackType, InteractionInstanceTypeUtils.CallbackTypes exitCallbackType)
         {
             EntryCallbackType = entryCallbackType;
             ExitCallbackType = exitCallbackType;
-            InteractionInstanceType = interactionInstanceType;
+            InteractionInstanceType = interactionInstanceType.FullName;
             SimDescription = simDescription;
             SpecialOutfitKey = specialOutfitKey;
         }
@@ -51,10 +50,21 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignments.Remove(outfitAssignment);
                     if (removeSpecialOutfits)
                     {
-                        simDescription.RemoveSpecialOutfit(outfitAssignment.InteractionInstanceType.FullName);
+                        simDescription.RemoveSpecialOutfit(outfitAssignment.InteractionInstanceType);
                     }
                 }
             }
+        }
+
+        public static void SwitchSimToAssignedOutfit(Sims3.Gameplay.Actors.Sim sim, OutfitAssignment outfitAssignment)
+        {
+            int specialOutfitIndex = outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(Sims3.SimIFace.ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
+            if (sim.CurrentOutfitCategory != OutfitCategories.Special || sim.CurrentOutfitIndex != specialOutfitIndex)
+            {
+                outfitAssignment.PreviousOutfitCategory = sim.CurrentOutfitCategory;
+                outfitAssignment.PreviousOutfitIndex = sim.CurrentOutfitIndex;
+            }
+            sim.SwitchToOutfitWithSpin(OutfitCategories.Special, specialOutfitIndex);
         }
 
         public static bool TryGetOutfitAssignment(SimDescription simDescription, Sims3.Gameplay.Interactions.InteractionInstance interactionInstance, out OutfitAssignment outfitAssignment)
@@ -64,7 +74,7 @@ namespace Destrospean.OutfitAssignment
 
         public static bool TryGetOutfitAssignment(SimDescription simDescription, Type interactionInstanceType, out OutfitAssignment outfitAssignment)
         {
-            List<OutfitAssignment> results = OutfitAssignments.FindAll(x => x.SimDescription == simDescription && x.InteractionInstanceType.IsAssignableFrom(interactionInstanceType));
+            List<OutfitAssignment> results = OutfitAssignments.FindAll(x => x.SimDescription == simDescription && Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType).IsAssignableFrom(interactionInstanceType));
             if (results.Count == 0)
             {
                 outfitAssignment = null;

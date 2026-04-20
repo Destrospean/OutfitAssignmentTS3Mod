@@ -1,4 +1,6 @@
-﻿using Sims3.Gameplay.Interactions;
+﻿using Sims3.Gameplay.Actors;
+using Sims3.Gameplay.Interactions;
+using Sims3.Gameplay.Utilities;
 
 namespace Destrospean
 {
@@ -7,12 +9,14 @@ namespace Destrospean
     {
         public delegate void InteractionInstanceAction(InteractionInstance interactionInstance);
 
+        public delegate void WaitForSynchronizationLevelAction(InteractionInstance interactionInstance, Sim.SyncLevel syncLevel);
+
         [MonoPatcherLib.TypePatch(typeof(InteractionInstance))]
         public class InteractionInstancePatch
         {
             public bool RunInteractionWithoutCleanup()
             {
-                InteractionInstance interactionInstance = (InteractionInstance)(object)(this);
+                InteractionInstance interactionInstance = (InteractionInstance)(object)this;
                 if (interactionInstance.StandardEntryCalled)
                 {
                     return false;
@@ -142,7 +146,7 @@ namespace Destrospean
 
             public void StandardEntry(bool addToUseList)
             {
-                InteractionInstance interactionInstance = (InteractionInstance)(object)(this);
+                InteractionInstance interactionInstance = (InteractionInstance)(object)this;
                 StandardEntryPreCallCallback(interactionInstance);
                 interactionInstance.mInteractionState = InteractionInstance.InteractionState.StandardEntry;
                 if (addToUseList)
@@ -157,7 +161,7 @@ namespace Destrospean
 
             public void StandardExit(bool removeFromUseList, bool validateUseList)
             {
-                InteractionInstance interactionInstance = (InteractionInstance)(object)(this);
+                InteractionInstance interactionInstance = (InteractionInstance)(object)this;
                 interactionInstance.mInteractionState = InteractionInstance.InteractionState.StandardExit;
                 interactionInstance.DeactivateTone();
                 if (removeFromUseList && interactionInstance.Target != null)
@@ -177,6 +181,69 @@ namespace Destrospean
             }
         }
 
+        [MonoPatcherLib.TypePatch(typeof(Sim))]
+        public class SimPatch
+        {
+            public bool WaitForSynchronizationLevelWithSim(Sim targetSim, Sim.SyncLevel desiredSynchLevel, ExitReason exitReasonInterrupt, float giveupTime, SyncLoopCallbackFunction loopCallback, float notifySimMinutes, bool performSocializeWithTest)
+            {
+                Sim sim = (Sim)(object)this;
+                DateAndTime dateAndTime = SimClock.CurrentTime(),
+                previousDateAndTime = dateAndTime;
+                Sims3.SimIFace.GreyedOutTooltipCallback greyedOutTooltipCallback = null;
+                sim.SynchronizationSleeping = sim.SynchronizationLevel >= desiredSynchLevel;
+                while (!sim.IsAtSynchronizationLevelWith(targetSim, desiredSynchLevel))
+                {
+                    if (SimClock.ElapsedTime(TimeUnit.Minutes, dateAndTime) >= giveupTime)
+                    {
+                        sim.OnWaitForSynchronizationLevelWithSimFailed(targetSim);
+                        return false;
+                    }
+                    if (sim.HasExitReason(exitReasonInterrupt))
+                    {
+                        sim.OnWaitForSynchronizationLevelWithSimFailed(targetSim);
+                        return false;
+                    }
+                    if (performSocializeWithTest)
+                    {
+                        InteractionTestResult result = Sims3.Gameplay.Socializing.SocialInteractionA.Definition.CanSocializeWithSyncCheck(null, sim, targetSim, sim.IsInAutonomousInteraction(), ref greyedOutTooltipCallback, true, true);
+                        if (!IUtil.IsPass(result))
+                        {
+                            sim.OnWaitForSynchronizationLevelWithSimFailed(targetSim);
+                            return false;
+                        }
+                    }
+                    if (loopCallback != null && SimClock.ElapsedTime(TimeUnit.Minutes, previousDateAndTime) >= notifySimMinutes)
+                    {
+                        if (!loopCallback())
+                        {
+                            sim.OnWaitForSynchronizationLevelWithSimFailed(targetSim);
+                            return false;
+                        }
+                        previousDateAndTime = SimClock.CurrentTime();
+                    }
+                    Sims3.SimIFace.Simulator.Sleep(0);
+                }
+                sim.SynchronizationSleeping = false;
+                ExitReason exitReason = exitReasonInterrupt;
+                if (sim.SynchronizationRole == Sim.SyncRole.Receiver)
+                {
+                    exitReason &= ExitReason.SynchronizationFailed;
+                }
+                if (sim.HasExitReason(exitReason))
+                {
+                    sim.OnWaitForSynchronizationLevelWithSimFailed(targetSim);
+                    return false;
+                }
+                if (!sim.IsAtSynchronizationLevelWith(targetSim, desiredSynchLevel))
+                {
+                    sim.OnWaitForSynchronizationLevelWithSimFailed(targetSim);
+                    return false;
+                }
+                OnWaitForSynchronizationLevel(sim.CurrentInteraction, desiredSynchLevel);
+                return true;
+            }
+        }
+
         public static InteractionInstanceAction OnInteractedStarted = (interactionInstance) =>
             {
             },
@@ -187,6 +254,10 @@ namespace Destrospean
             {
             },
         StandardExitPostCallCallback = (interactionInstance) =>
+            {
+            };
+
+        public static WaitForSynchronizationLevelAction OnWaitForSynchronizationLevel = (interactionInstance, syncLevel) =>
             {
             };
     }
