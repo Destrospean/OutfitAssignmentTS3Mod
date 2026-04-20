@@ -9,25 +9,33 @@ namespace Destrospean.OutfitAssignment
     public static class OutfitAssignmentUtils
     {
         [PersistableStatic(true)]
-        public static readonly List<OutfitAssignment> OutfitAssignments = new List<OutfitAssignment>();
+        public static List<OutfitAssignment> OutfitAssignments = new List<OutfitAssignment>();
+
+        [PersistableStatic(true)]
+        public static List<Outfit> PreviousOutfits = new List<Outfit>();
+
+        [Persistable]
+        public class Outfit
+        {
+            public OutfitCategories Category;
+
+            public int Index;
+
+            public SimDescription SimDescription;
+        }
 
         [Persistable]
         public class OutfitAssignment
         {
-            [Persistable]
-            public readonly InteractionInstanceTypeUtils.CallbackTypes EntryCallbackType, ExitCallbackType;
+            public InteractionInstanceTypeUtils.CallbackTypes EntryCallbackType, ExitCallbackType;
 
-            [Persistable]
-            public readonly string InteractionInstanceType, SpecialOutfitKey;
+            public string InteractionInstanceType, SpecialOutfitKey;
 
-            [Persistable]
-            public OutfitCategories PreviousOutfitCategory = OutfitCategories.Everyday;
+            public SimDescription SimDescription;
 
-            [Persistable]
-            public int PreviousOutfitIndex = 0;
-
-            [Persistable]
-            public readonly SimDescription SimDescription;
+            public OutfitAssignment()
+            {
+            }
 
             public OutfitAssignment(SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceTypeUtils.CallbackTypes entryCallbackType, InteractionInstanceTypeUtils.CallbackTypes exitCallbackType)
             {
@@ -65,15 +73,37 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public static void SwitchSimToAssignedOutfit(this Sims3.Gameplay.Actors.Sim sim, OutfitAssignment outfitAssignment)
+        public static void SwitchToAssignedOutfit(this Sims3.Gameplay.Actors.Sim sim, OutfitAssignment outfitAssignment)
         {
-            int specialOutfitIndex = outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
+            if (sim.CurrentOutfitCategory == OutfitCategories.Singed || sim.CurrentOutfitCategory == OutfitCategories.SkinnyDippingTowel)
+            {
+                return;
+            }
+            int specialOutfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
             if (sim.CurrentOutfitCategory != OutfitCategories.Special || sim.CurrentOutfitIndex != specialOutfitIndex)
             {
-                outfitAssignment.PreviousOutfitCategory = sim.CurrentOutfitCategory;
-                outfitAssignment.PreviousOutfitIndex = sim.CurrentOutfitIndex;
+                PreviousOutfits.RemoveAll(x => x.SimDescription == sim.SimDescription);
+                PreviousOutfits.Insert(0, new Outfit
+                    {
+                        Category = sim.CurrentOutfitCategory,
+                        Index = sim.CurrentOutfitIndex,
+                        SimDescription = sim.SimDescription
+                    });
             }
             sim.SwitchToOutfitWithSpin(OutfitCategories.Special, specialOutfitIndex);
+        }
+
+        public static void SwitchToPreviousOutfit(this Sims3.Gameplay.Actors.Sim sim)
+        {
+            int previousOutfitIndex = OutfitAssignmentUtils.PreviousOutfits.FindIndex(x => x.SimDescription == sim.SimDescription);
+            if (previousOutfitIndex > -1)
+            {
+                if (sim.CurrentOutfitCategory != OutfitCategories.Singed && sim.CurrentOutfitCategory != OutfitCategories.SkinnyDippingTowel)
+                {
+                    sim.SwitchToOutfitWithSpin(OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Category, OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Index);
+                }
+                OutfitAssignmentUtils.PreviousOutfits.RemoveAt(previousOutfitIndex);
+            }
         }
 
         public static bool TryGetOutfitAssignment(this SimDescription simDescription, Sims3.Gameplay.Interactions.InteractionInstance interactionInstance, out OutfitAssignment outfitAssignment)

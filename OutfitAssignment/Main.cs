@@ -65,7 +65,7 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted)
                     {
-                        interactionInstance.InstanceActor.SwitchSimToAssignedOutfit(outfitAssignment);
+                        interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                     }
                 };
             InteractionInstanceAdditions.OnInteractionEnded += (interactionInstance) =>
@@ -73,7 +73,7 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
                     {
-                        interactionInstance.InstanceActor.SwitchToOutfitWithSpin(outfitAssignment.PreviousOutfitCategory, outfitAssignment.PreviousOutfitIndex);
+                        interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                     }
                 };
             InteractionInstanceAdditions.OnWaitForSynchronizationLevel += (interactionInstance, syncLevel) =>
@@ -86,19 +86,19 @@ namespace Destrospean.OutfitAssignment
                             case Sim.SyncLevel.Committed:
                                 if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCommitted)
                                 {
-                                    interactionInstance.InstanceActor.SwitchSimToAssignedOutfit(outfitAssignment);
+                                    interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                                 }
                                 break;
                             case Sim.SyncLevel.Completed:
                                 if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCompleted)
                                 {
-                                    interactionInstance.InstanceActor.SwitchToOutfitWithSpin(outfitAssignment.PreviousOutfitCategory, outfitAssignment.PreviousOutfitIndex);
+                                    interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                                 }
                                 break;
                             case Sim.SyncLevel.Routed:
                                 if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelRouted)
                                 {
-                                    interactionInstance.InstanceActor.SwitchSimToAssignedOutfit(outfitAssignment);
+                                    interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                                 }
                                 break;
                         }
@@ -109,7 +109,7 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardEntry)
                     {
-                        interactionInstance.InstanceActor.SwitchSimToAssignedOutfit(outfitAssignment);
+                        interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                     }
                 };
             InteractionInstanceAdditions.StandardExitPostCallCallback += (interactionInstance) =>
@@ -117,7 +117,7 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardExit)
                     {
-                        interactionInstance.InstanceActor.SwitchToOutfitWithSpin(outfitAssignment.PreviousOutfitCategory, outfitAssignment.PreviousOutfitIndex);
+                        interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                     }
                 };
         }
