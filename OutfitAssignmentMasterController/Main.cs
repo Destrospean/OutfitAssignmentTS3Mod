@@ -41,8 +41,8 @@ namespace Destrospean.OutfitAssignment.MasterController
                     string specialOutfitKey = "";
                     foreach (System.Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
-                        OutfitAssignment outfitAssignment;
-                        if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
                         {
                             if (!string.IsNullOrEmpty(specialOutfitKey))
                             {
@@ -58,7 +58,7 @@ namespace Destrospean.OutfitAssignment.MasterController
                     {
                         foreach (System.Type interactionInstanceType in selectedInteractionInstanceTypes)
                         {
-                            OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                            Target.SimDescription.AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                         }
                     }
                     else if (!outfitIsPreexisting)

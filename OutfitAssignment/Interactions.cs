@@ -115,8 +115,8 @@ namespace Destrospean.OutfitAssignment
                     string specialOutfitKey = "";
                     foreach (Type interactionInstanceType in interactionInstanceTypes)
                     {
-                        OutfitAssignment outfitAssignment;
-                        if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
                         {
                             if (!string.IsNullOrEmpty(specialOutfitKey))
                             {
@@ -132,7 +132,7 @@ namespace Destrospean.OutfitAssignment
                     {
                         foreach (Type interactionInstanceType in interactionInstanceTypes)
                         {
-                            OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                            Target.SimDescription.AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                         }
                     }
                     else if (!outfitIsPreexisting)
@@ -167,7 +167,7 @@ namespace Destrospean.OutfitAssignment
 
                 public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return OutfitAssignment.GetAllOutfitAssignments(target.SimDescription).Length > 0;
+                    return target.SimDescription.GetAllOutfitAssignments().Length > 0;
                 }
             }
 
@@ -175,14 +175,14 @@ namespace Destrospean.OutfitAssignment
             {
                 Type[] interactionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out interactionInstanceTypes, Array.ConvertAll(OutfitAssignment.GetAllOutfitAssignments(Target.SimDescription), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType))) && AssignOutfitToInteraction.TryGetEntryCallbackType(Target, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(Target, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out interactionInstanceTypes, Array.ConvertAll(Target.SimDescription.GetAllOutfitAssignments(), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType))) && AssignOutfitToInteraction.TryGetEntryCallbackType(Target, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(Target, out exitCallbackType))
                 {
                     foreach (Type interactionInstanceType in interactionInstanceTypes)
                     {
-                        OutfitAssignment outfitAssignment;
-                        if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment))
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment))
                         {
-                            OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, outfitAssignment.SpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                            Target.SimDescription.AssignOutfitToInteraction(outfitAssignment.SpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                         }
                     }
                 }
@@ -213,22 +213,22 @@ namespace Destrospean.OutfitAssignment
 
                 public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return OutfitAssignment.GetAllOutfitAssignments(target.SimDescription).Length > 0;
+                    return target.SimDescription.GetAllOutfitAssignments().Length > 0;
                 }
             }
 
             public override bool Run()
             {
                 Type[] sourceInteractionInstanceTypes, destinationInteractionInstanceTypes;
-                if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.ConvertAll(OutfitAssignment.GetAllOutfitAssignments(Target.SimDescription), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType)), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
+                if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.ConvertAll(Target.SimDescription.GetAllOutfitAssignments(), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType)), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
                 {
                     return true;
                 }
                 string specialOutfitKey = "";
                 foreach (Type interactionInstanceType in sourceInteractionInstanceTypes)
                 {
-                    OutfitAssignment outfitAssignment;
-                    if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
+                    OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                    if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
                     {
                         if (!string.IsNullOrEmpty(specialOutfitKey))
                         {
@@ -243,7 +243,7 @@ namespace Destrospean.OutfitAssignment
                 {
                     foreach (Type interactionInstanceType in destinationInteractionInstanceTypes)
                     {
-                        OutfitAssignment.AssignOutfitToInteraction(Target.SimDescription, specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        Target.SimDescription.AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                     }
                 }
                 return true;
@@ -273,23 +273,23 @@ namespace Destrospean.OutfitAssignment
 
                 public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return OutfitAssignment.GetAllOutfitAssignments(target.SimDescription).Length > 0;
+                    return target.SimDescription.GetAllOutfitAssignments().Length > 0;
                 }
             }
 
             public override bool Run()
             {
                 Type[] interactionInstanceTypes;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out interactionInstanceTypes, Array.ConvertAll(OutfitAssignment.GetAllOutfitAssignments(Target.SimDescription), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType))))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out interactionInstanceTypes, Array.ConvertAll(Target.SimDescription.GetAllOutfitAssignments(), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType))))
                 {
                     foreach (Type interactionInstanceType in interactionInstanceTypes)
                     {
-                        OutfitAssignment outfitAssignment;
-                        if (OutfitAssignment.TryGetOutfitAssignment(Target.SimDescription, interactionInstanceType, out outfitAssignment) && Array.FindAll(OutfitAssignment.GetAllOutfitAssignments(Target.SimDescription), x => x.SpecialOutfitKey == outfitAssignment.SpecialOutfitKey).Length == 1)
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && Array.FindAll(Target.SimDescription.GetAllOutfitAssignments(), x => x.SpecialOutfitKey == outfitAssignment.SpecialOutfitKey).Length == 1)
                         {
                             Target.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
                         }
-                        OutfitAssignment.UnassignOutfitToInteraction(Target.SimDescription, interactionInstanceType);
+                        Target.SimDescription.UnassignOutfitToInteraction(interactionInstanceType);
                     }
                 }
                 return true;
