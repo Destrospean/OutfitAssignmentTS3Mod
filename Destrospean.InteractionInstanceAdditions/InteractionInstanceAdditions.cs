@@ -106,7 +106,7 @@ namespace Destrospean
                     {
                         Sims3.Gameplay.Socializing.Relationship.RemoveSimDescriptionRelationships(interactionInstance.InstanceActor.SimDescription);
                     }
-                    Sims3.Gameplay.Actors.Sim sim = interactionInstance.Target as Sims3.Gameplay.Actors.Sim;
+                    Sim sim = interactionInstance.Target as Sim;
                     if (sim != null && sim.SimDescription.IsBonehilda)
                     {
                         Sims3.Gameplay.Socializing.Relationship.RemoveSimDescriptionRelationships(sim.SimDescription);
@@ -116,7 +116,7 @@ namespace Destrospean
                 {
                     Sims3.UI.Resort.ResortExpenseDialog.RefreshGrid();
                 }
-                if (interactionInstance.InstanceActor != null && (interactionInstance.InstanceActor.ExitReason & Sims3.Gameplay.Actors.ExitReason.RouteFailed) != 0)
+                if (interactionInstance.InstanceActor != null && (interactionInstance.InstanceActor.ExitReason & ExitReason.RouteFailed) != 0)
                 {
                     Sims3.Gameplay.EventSystem.EventTracker.SendEvent(Sims3.Gameplay.EventSystem.EventTypeId.kUsedObect, interactionInstance.InstanceActor, interactionInstance.Target);
                 }
