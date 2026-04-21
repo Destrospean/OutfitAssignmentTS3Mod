@@ -6,7 +6,7 @@
     <ProjectGuid>{74388C69-712C-4221-80E0-45974A7CEAA7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Destrospean.OutfitAssignment.MasterController</RootNamespace>
-    <AssemblyName>OutfitAssignmentMasterController</AssemblyName>
+    <AssemblyName>Destrospean.OutfitAssignment.MasterController</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -85,14 +85,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OutfitAssignment\OutfitAssignment.csproj">
-      <Project>{D5E41DB2-3F43-4EEB-9CC7-303D24C203C1}</Project>
-      <Name>OutfitAssignment</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\MonoPatcher\MonoPatcher\MonoPatcher.csproj">
       <Project>{91460F7B-9C23-4A43-AB52-95EAC8D52D93}</Project>
       <Name>MonoPatcher</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Destrospean.OutfitAssignment\Destrospean.OutfitAssignment.csproj">
+      <Project>{D5E41DB2-3F43-4EEB-9CC7-303D24C203C1}</Project>
+      <Name>Destrospean.OutfitAssignment</Name>
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>

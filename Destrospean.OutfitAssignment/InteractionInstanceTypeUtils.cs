@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Sims3.UI;
-using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
 
 namespace Destrospean.OutfitAssignment
 {
