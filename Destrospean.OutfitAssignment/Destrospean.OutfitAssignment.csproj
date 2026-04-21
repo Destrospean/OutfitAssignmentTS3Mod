@@ -102,11 +102,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\MonoPatcher\MonoPatcher\MonoPatcher.csproj">
-      <Project>{91460F7B-9C23-4A43-AB52-95EAC8D52D93}</Project>
-      <Name>MonoPatcher</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\Destrospean.InteractionInstanceAdditions\Destrospean.InteractionInstanceAdditions.csproj">
       <Project>{6A9A443F-2CF4-4C27-B28A-5C4852B03D4C}</Project>
       <Name>Destrospean.InteractionInstanceAdditions</Name>

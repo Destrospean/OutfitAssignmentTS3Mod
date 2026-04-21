@@ -4,9 +4,11 @@ using Sims3.SimIFace;
 
 namespace Destrospean.OutfitAssignment
 {
-    [MonoPatcherLib.Plugin]
     public class Main
     {
+        [Tunable]
+        protected static bool kInstantiator;
+
         static Main()
         {
             InteractionInstanceTypeUtils.InitInteractionInstanceTypes();

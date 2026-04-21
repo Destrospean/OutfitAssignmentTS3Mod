@@ -4,14 +4,15 @@ using Sims3.Gameplay.Utilities;
 
 namespace Destrospean
 {
-    [MonoPatcherLib.Plugin]
     public class InteractionInstanceAdditions
     {
+        [Sims3.SimIFace.Tunable]
+        protected static bool kInstantiator;
+
         public delegate void InteractionInstanceAction(InteractionInstance interactionInstance);
 
         public delegate void WaitForSynchronizationLevelAction(InteractionInstance interactionInstance, Sim.SyncLevel syncLevel);
 
-        [MonoPatcherLib.TypePatch(typeof(InteractionInstance))]
         public class InteractionInstancePatch
         {
             public bool RunInteractionWithoutCleanup()
@@ -181,7 +182,6 @@ namespace Destrospean
             }
         }
 
-        [MonoPatcherLib.TypePatch(typeof(Sim))]
         public class SimPatch
         {
             public bool WaitForSynchronizationLevelWithSim(Sim targetSim, Sim.SyncLevel desiredSynchLevel, ExitReason exitReasonInterrupt, float giveupTime, SyncLoopCallbackFunction loopCallback, float notifySimMinutes, bool performSocializeWithTest)
@@ -260,5 +260,27 @@ namespace Destrospean
         public static WaitForSynchronizationLevelAction OnWaitForSynchronizationLevel = (interactionInstance, syncLevel) =>
             {
             };
+        
+        static InteractionInstanceAdditions()
+        {
+            ReplaceMethod(typeof(InteractionInstance).GetMethod("RunInteractionWithoutCleanup", System.Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("RunInteractionWithoutCleanup").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("RunInteractionWithoutCleanup"));
+            ReplaceMethod(typeof(InteractionInstance).GetMethod("StandardEntry", System.Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("StandardEntry").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("StandardEntry"));
+            ReplaceMethod(typeof(InteractionInstance).GetMethod("StandardExit", System.Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("StandardExit").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("StandardExit"));
+            ReplaceMethod(typeof(Sim).GetMethod("WaitForSynchronizationLevelWithSim", System.Array.ConvertAll(typeof(SimPatch).GetMethod("WaitForSynchronizationLevelWithSim").GetParameters(), x => x.ParameterType)), typeof(SimPatch).GetMethod("WaitForSynchronizationLevelWithSim"));
+        }
+
+        public static void ReplaceMethod(System.Reflection.MethodInfo oldMethod, System.Reflection.MethodInfo newMethod)
+        {
+            // This code was borrowed from Lazy Duchess' Mono Patcher
+            unsafe
+            {
+                System.IntPtr newMethodHandle = newMethod.MethodHandle.Value,
+                oldMethodHandle = oldMethod.MethodHandle.Value;
+                byte[] replacementByteArray = new byte[40];
+                System.Runtime.InteropServices.Marshal.Copy(newMethodHandle, replacementByteArray, 0, 40);
+                System.Runtime.InteropServices.Marshal.Copy(replacementByteArray, 0, oldMethodHandle, 24);
+                System.Runtime.InteropServices.Marshal.Copy(replacementByteArray, 28, new System.IntPtr(oldMethodHandle.ToInt32() + 28), 12);
+            }
+        }
     }
 }

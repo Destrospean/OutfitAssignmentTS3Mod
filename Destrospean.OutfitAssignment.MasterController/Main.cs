@@ -7,9 +7,11 @@ using Sims3.SimIFace.CAS;
 
 namespace Destrospean.OutfitAssignment.MasterController
 {
-    [MonoPatcherLib.Plugin]
     public class Main
     {
+        [Tunable]
+        protected static bool kInstantiator;
+
         public class AssignOutfitToInteraction : Interactions.AssignOutfitToInteraction
         {
             public class DefinitionModified : ImmediateInteractionDefinition<Sim, Sim, AssignOutfitToInteraction>

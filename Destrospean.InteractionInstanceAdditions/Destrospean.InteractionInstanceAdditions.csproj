@@ -21,6 +21,7 @@
     <LangVersion>5</LangVersion>
     <NoStdLib>true</NoStdLib>
     <PlatformTarget>x86</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -32,6 +33,7 @@
     <NoStdLib>true</NoStdLib>
     <PlatformTarget>x86</PlatformTarget>
     <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -79,12 +81,5 @@
       <HintPath>..\libs\UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\MonoPatcher\MonoPatcher\MonoPatcher.csproj">
-      <Project>{91460F7B-9C23-4A43-AB52-95EAC8D52D93}</Project>
-      <Name>MonoPatcher</Name>
-      <Private>False</Private>
-    </ProjectReference>
   </ItemGroup>
 </Project>
