@@ -1,5 +1,4 @@
-﻿using System;
-using Sims3.Gameplay.Actors;
+﻿using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
 
@@ -29,9 +28,9 @@ namespace Destrospean.OutfitAssignment
                                     OutfitAssignmentUtils.RemoveAllOutfitAssignments(sim.SimDescription);
                                 }
                             }
-                            catch (Exception ex)
+                            catch (System.Exception ex)
                             {
-                                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                                ((IScriptErrorWindow)System.AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                             }
                             return ListenerAction.Keep;
                         });
@@ -45,9 +44,9 @@ namespace Destrospean.OutfitAssignment
                                     AddInteractions(sim);
                                 }
                             }
-                            catch (Exception ex)
+                            catch (System.Exception ex)
                             {
-                                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                                ((IScriptErrorWindow)System.AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                             }
                             return ListenerAction.Keep;
                         });
