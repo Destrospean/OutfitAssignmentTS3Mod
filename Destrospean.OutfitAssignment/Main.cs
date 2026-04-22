@@ -1,5 +1,6 @@
 ﻿using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.EventSystem;
+using Sims3.Gameplay.Utilities;
 using Sims3.SimIFace;
 
 namespace Destrospean.OutfitAssignment
@@ -60,13 +61,46 @@ namespace Destrospean.OutfitAssignment
                     simDescriptionDisposedListener = null;
                     simInstantiatedListener = null;
                 };
-            
             InteractionInstanceAdditions.OnInteractedStarted += (interactionInstance) =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted)
+                    if (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment))
                     {
-                        interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
+                        switch (outfitAssignment.EntryCallbackType)
+                        {
+                            case InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted:
+                                interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
+                                break;
+                            case InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged:
+                                Sims3.SimIFace.CAS.OutfitCategories initialOutfitCategory = interactionInstance.InstanceActor.CurrentOutfitCategory;
+                                int initialOutfitIndex = interactionInstance.InstanceActor.CurrentOutfitIndex,
+                                specialOutfitIndex = outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
+                                if (initialOutfitCategory != Sims3.SimIFace.CAS.OutfitCategories.Special || initialOutfitIndex != specialOutfitIndex)
+                                {
+                                    OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == outfitAssignment.SimDescription);
+                                    OutfitAssignmentUtils.PreviousOutfits.Insert(0, new OutfitAssignmentUtils.Outfit
+                                        {
+                                            Category = initialOutfitCategory,
+                                            Index = initialOutfitIndex,
+                                            SimDescription = outfitAssignment.SimDescription
+                                        });
+                                }
+                                AlarmHandle[] alarms = new AlarmHandle[1];
+                                alarms[0] = interactionInstance.InstanceActor.AddAlarmRepeating(1, TimeUnit.Minutes, () =>
+                                    {
+                                        if (interactionInstance.InstanceActor.CurrentInteraction != interactionInstance)
+                                        {
+                                            interactionInstance.InstanceActor.RemoveAlarm(alarms[0]);
+                                            return;
+                                        }
+                                        if (initialOutfitCategory != interactionInstance.InstanceActor.CurrentOutfitCategory || initialOutfitIndex != interactionInstance.InstanceActor.CurrentOutfitIndex)
+                                        {
+                                            interactionInstance.InstanceActor.SwitchToOutfitWithoutSpin(Sims3.SimIFace.CAS.OutfitCategories.Special, specialOutfitIndex);
+                                            interactionInstance.InstanceActor.RemoveAlarm(alarms[0]);
+                                        }
+                                    }, outfitAssignment.SpecialOutfitKey, AlarmType.DeleteOnReset);
+                                break;
+                        }
                     }
                 };
             InteractionInstanceAdditions.OnInteractionEnded += (interactionInstance) =>

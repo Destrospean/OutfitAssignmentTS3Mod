@@ -29,7 +29,8 @@ namespace Destrospean.OutfitAssignment
             StandardExit,
             SyncLevelRouted,
             SyncLevelCommitted,
-            SyncLevelCompleted
+            SyncLevelCompleted,
+            OutfitChanged
         }
 
         class TextColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>

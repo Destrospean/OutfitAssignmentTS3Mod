@@ -64,6 +64,10 @@ namespace Destrospean.OutfitAssignment
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:SyncLevelCommitted"),
                             InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCommitted.ToString()
+                        },
+                        {
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:OutfitChanged"),
+                            InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged.ToString()
                         }
                     }, InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()) as string;
                 if (text == null)
