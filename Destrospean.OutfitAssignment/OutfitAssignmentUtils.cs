@@ -73,9 +73,9 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public static void SwitchToAssignedOutfit(this Sims3.Gameplay.Actors.Sim sim, OutfitAssignment outfitAssignment)
+        public static void SwitchToAssignedOutfit(this Sims3.Gameplay.Actors.Sim sim, OutfitAssignment outfitAssignment, bool spin = true)
         {
-            if (sim.CurrentOutfitCategory == OutfitCategories.Singed || sim.CurrentOutfitCategory == OutfitCategories.SkinnyDippingTowel)
+            if (sim.BuffManager.DisallowClothesChange() || sim.OccultManager.DisallowClothesChange())
             {
                 return;
             }
@@ -90,17 +90,31 @@ namespace Destrospean.OutfitAssignment
                         SimDescription = sim.SimDescription
                     });
             }
-            sim.SwitchToOutfitWithSpin(OutfitCategories.Special, specialOutfitIndex);
+            if (spin)
+            {
+                sim.SwitchToOutfitWithSpin(OutfitCategories.Special, specialOutfitIndex);
+            }
+            else
+            {
+                sim.SwitchToOutfitWithoutSpin(OutfitCategories.Special, specialOutfitIndex);
+            }
         }
 
-        public static void SwitchToPreviousOutfit(this Sims3.Gameplay.Actors.Sim sim)
+        public static void SwitchToPreviousOutfit(this Sims3.Gameplay.Actors.Sim sim, bool spin = true)
         {
             int previousOutfitIndex = OutfitAssignmentUtils.PreviousOutfits.FindIndex(x => x.SimDescription == sim.SimDescription);
             if (previousOutfitIndex > -1)
             {
-                if (sim.CurrentOutfitCategory != OutfitCategories.Singed && sim.CurrentOutfitCategory != OutfitCategories.SkinnyDippingTowel)
+                if (!sim.BuffManager.DisallowClothesChange() && !sim.OccultManager.DisallowClothesChange())
                 {
-                    sim.SwitchToOutfitWithSpin(OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Category, OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Index);
+                    if (spin)
+                    {
+                        sim.SwitchToOutfitWithSpin(OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Category, OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Index);
+                    }
+                    else
+                    {
+                        sim.SwitchToOutfitWithoutSpin(OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Category, OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Index);
+                    }
                 }
                 OutfitAssignmentUtils.PreviousOutfits.RemoveAt(previousOutfitIndex);
             }

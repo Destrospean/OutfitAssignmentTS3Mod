@@ -57,6 +57,7 @@
     <Compile Include="Dialogs.cs" />
     <Compile Include="InteractionInstanceTypeUtils.cs" />
     <Compile Include="OutfitAssignmentUtils.cs" />
+    <Compile Include="Tuning.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib">

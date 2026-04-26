@@ -86,13 +86,13 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public static ResourceKey CreateAndAddSpecialOutfit(this Sim actor, string specialOutfitKey, ResourceKey uniformKey)
+        public static ResourceKey CreateAndAddSpecialOutfit(this Sim sim, string specialOutfitKey, ResourceKey uniformKey)
         {
             if (uniformKey == ResourceKey.kInvalidResourceKey)
             {
                 return uniformKey;
             }
-            SimDescription simDescription = actor.SimDescription;
+            SimDescription simDescription = sim.SimDescription;
             if (simDescription.HasSpecialOutfit(specialOutfitKey))
             {
                 return simDescription.GetSpecialOutfit(specialOutfitKey).Key;
@@ -102,33 +102,33 @@ namespace Destrospean.OutfitAssignment
             return key;
         }
 
-        public static bool EditSpecialOutfit(this Sim actor, string specialOutfitKey)
+        public static bool EditSpecialOutfit(this Sim sim, string specialOutfitKey)
         {
-            SimDescription simDescription = actor.SimDescription;
+            SimDescription simDescription = sim.SimDescription;
             if (!simDescription.HasSpecialOutfit(specialOutfitKey))
             {
                 simDescription.AddSpecialOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), specialOutfitKey);
             }
-            OutfitCategories previousOutfitCategory = actor.CurrentOutfitCategory;
-            int previousOutfitIndex = actor.CurrentOutfitIndex;
+            OutfitCategories previousOutfitCategory = sim.CurrentOutfitCategory;
+            int previousOutfitIndex = sim.CurrentOutfitIndex;
             simDescription.AddOutfit(simDescription.GetSpecialOutfit(specialOutfitKey), OutfitCategories.Everyday, 0);
             simDescription.RemoveSpecialOutfit(specialOutfitKey);
-            actor.SwitchToOutfitWithoutSpin(OutfitCategories.Everyday, 0);
+            sim.SwitchToOutfitWithoutSpin(OutfitCategories.Everyday, 0);
             CASLogic casLogic = CASLogic.GetSingleton();
             casLogic.ShowUI += OnShowUI;
             casLogic.UseTempSimDesc = true;
-            casLogic.LoadSim(simDescription, actor.CurrentOutfitCategory, actor.CurrentOutfitIndex);
+            casLogic.LoadSim(simDescription, sim.CurrentOutfitCategory, sim.CurrentOutfitIndex);
             CASChangeReporter.Instance.ClearChanges();
             GameStates.TransitionToCASStylistMode();
             while (GameStates.NextInWorldStateId != 0)
             {
                 Simulator.Sleep(0);
             }
-            CASChangeReporter.Instance.SendChangedEvents(actor);
+            CASChangeReporter.Instance.SendChangedEvents(sim);
             casLogic.ShowUI -= OnShowUI;
             simDescription.AddSpecialOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), specialOutfitKey);
             simDescription.RemoveOutfit(OutfitCategories.Everyday, 0, true);
-            actor.SwitchToOutfitWithoutSpin(previousOutfitCategory, previousOutfitIndex);
+            sim.SwitchToOutfitWithoutSpin(previousOutfitCategory, previousOutfitIndex);
             return !CASChangeReporter.Instance.CasCancelled;
         }
 
