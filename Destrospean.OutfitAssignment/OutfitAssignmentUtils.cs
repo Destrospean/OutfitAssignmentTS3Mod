@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sims3.Gameplay.ActorSystems;
 using Sims3.Gameplay.CAS;
 using Sims3.SimIFace;
 using Sims3.SimIFace.CAS;
@@ -75,7 +76,7 @@ namespace Destrospean.OutfitAssignment
 
         public static void SwitchToAssignedOutfit(this Sims3.Gameplay.Actors.Sim sim, OutfitAssignment outfitAssignment, bool spin = true)
         {
-            if (sim.BuffManager.DisallowClothesChange() || sim.OccultManager.DisallowClothesChange())
+            if (sim.BuffManager.HasElement(BuffNames.Singed) || sim.BuffManager.HasElement(BuffNames.SingedElectricity) || sim.BuffManager.HasElement(BuffNames.EmbarrassedClothesHidden) || sim.BuffManager.DisallowClothesChange() || sim.OccultManager.DisallowClothesChange())
             {
                 return;
             }
@@ -105,7 +106,7 @@ namespace Destrospean.OutfitAssignment
             int previousOutfitIndex = OutfitAssignmentUtils.PreviousOutfits.FindIndex(x => x.SimDescription == sim.SimDescription);
             if (previousOutfitIndex > -1)
             {
-                if (!sim.BuffManager.DisallowClothesChange() && !sim.OccultManager.DisallowClothesChange())
+                if (!sim.BuffManager.HasElement(BuffNames.Singed) && !sim.BuffManager.HasElement(BuffNames.SingedElectricity) && !sim.BuffManager.HasElement(BuffNames.EmbarrassedClothesHidden) && !sim.BuffManager.DisallowClothesChange() && !sim.OccultManager.DisallowClothesChange())
                 {
                     if (spin)
                     {
