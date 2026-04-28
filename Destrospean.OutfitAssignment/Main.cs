@@ -1,8 +1,6 @@
 ﻿using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.EventSystem;
-using Sims3.Gameplay.Utilities;
 using Sims3.SimIFace;
-using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
 
 namespace Destrospean.OutfitAssignment
 {
@@ -11,10 +9,67 @@ namespace Destrospean.OutfitAssignment
         [Tunable]
         protected static bool kInstantiator;
 
+        public class SimPatch
+        {
+            public bool SwitchToOutfitWithSpin(Sim.SwitchOutfitHelper spin, bool mirrored)
+            {
+                Sim sim = (Sim)(object)this;
+                OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) && !OutfitAssignmentUtils.TimeToChangeBackList.Contains(outfitAssignment.SimDescription))
+                {
+                    spin = new Sim.SwitchOutfitHelper(sim, Sims3.SimIFace.CAS.OutfitCategories.Special, sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                }
+                spin.Start();
+                spin.Wait(true);
+                if (spin.WillChange)
+                {
+                    if (sim.SimDescription.ChildOrAbove)
+                    {
+                        if (mirrored && !sim.SimDescription.IsHorse)
+                        {
+                            mirrored = false;
+                        }
+                        if (sim.Posture is Sims3.Gameplay.Objects.Hoverboard.RidingHoverboardPosture)
+                        {
+                            spin.AddScriptEventHandler(sim.Posture.CurrentStateMachine);
+                            sim.Posture.CurrentStateMachine.RequestState("x", "ChangeClothes");
+                            sim.Posture.CurrentStateMachine.RequestState("x", "Hold");
+                        }
+                        else
+                        {
+                            StateMachineClient stateMachineClient = StateMachineClient.Acquire(sim, "solo_generic");
+                            string text = (mirrored ? "_mirrored" : "") + (sim.IsHuman ? "" : "_x");
+                            if (string.IsNullOrEmpty(spin.OverrideAnimation))
+                            {
+                                stateMachineClient.SetParameter("AnimationName", "a_clothesChange" + text, sim.IsHuman ? ProductVersion.BaseGame : ProductVersion.EP5);
+                            }
+                            else
+                            {
+                                stateMachineClient.SetParameter("AnimationName", spin.OverrideAnimation, spin.OverrideProductVersion);
+                            }
+                            spin.AddScriptEventHandler(stateMachineClient);
+                            stateMachineClient.SetActor("x", sim);
+                            stateMachineClient.EnterState("x", "Enter");
+                            stateMachineClient.RequestState("x", "Play Animation");
+                            stateMachineClient.RequestState("x", "Exit");
+                        }
+                    }
+                    else
+                    {
+                        spin.ChangeOutfit();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
+
         static Main()
         {
             InteractionInstanceTypeUtils.InitInteractionInstanceTypes();
-            EventListener simDescriptionDisposedListener = null,
+            InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("SwitchToOutfitWithSpin", System.Array.ConvertAll(typeof(SimPatch).GetMethod("SwitchToOutfitWithSpin").GetParameters(), x => x.ParameterType)), typeof(SimPatch).GetMethod("SwitchToOutfitWithSpin"));
+            EventListener simAgeTransitionListener = null,
+            simDescriptionDisposedListener = null,
             simInstantiatedListener = null;
             World.sOnWorldLoadFinishedEventHandler += (sender, e) =>
                 {
@@ -22,6 +77,22 @@ namespace Destrospean.OutfitAssignment
                     {
                         AddInteractions(sim);
                     }
+                    simAgeTransitionListener = EventTracker.AddListener(EventTypeId.kSimAgeTransition, evt =>
+                        {
+                            try
+                            {
+                                Sim sim = evt.TargetObject as Sim;
+                                if (sim != null)
+                                {
+                                    OutfitAssignmentUtils.RemoveAllOutfitAssignments(sim.SimDescription, true);
+                                }
+                            }
+                            catch (System.Exception ex)
+                            {
+                                ((IScriptErrorWindow)System.AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                            }
+                            return ListenerAction.Keep;
+                        });
                     simDescriptionDisposedListener = EventTracker.AddListener(EventTypeId.kSimDescriptionDisposed, evt =>
                         {
                             try
@@ -57,8 +128,10 @@ namespace Destrospean.OutfitAssignment
                 };
             World.sOnWorldQuitEventHandler += (sender, e) =>
                 {
+                    EventTracker.RemoveListener(simAgeTransitionListener);
                     EventTracker.RemoveListener(simDescriptionDisposedListener);
                     EventTracker.RemoveListener(simInstantiatedListener);
+                    simAgeTransitionListener = null;
                     simDescriptionDisposedListener = null;
                     simInstantiatedListener = null;
                 };
@@ -67,35 +140,26 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment))
                     {
-                        switch (outfitAssignment.EntryCallbackType)
+                        if (interactionInstance.InstanceActor.CurrentOutfitCategory != Sims3.SimIFace.CAS.OutfitCategories.Special || interactionInstance.InstanceActor.CurrentOutfitIndex != outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)))
                         {
-                            case InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted:
-                                interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
-                                break;
-                            case InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged:
-                                Sims3.SimIFace.CAS.SimOutfit initialOutfit = interactionInstance.InstanceActor.CurrentOutfit;
-                                AlarmHandle[] alarms = new AlarmHandle[1];
-                                alarms[0] = interactionInstance.InstanceActor.AddAlarmRepeating(Tuning.kOutfitChangedCheckInterval, TimeUnit.Seconds, () =>
-                                    {
-                                        if (interactionInstance.InstanceActor.CurrentInteraction != interactionInstance)
-                                        {
-                                            interactionInstance.InstanceActor.RemoveAlarm(alarms[0]);
-                                            return;
-                                        }
-                                        if (initialOutfit != interactionInstance.InstanceActor.CurrentOutfit)
-                                        {
-                                            interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment, false);
-                                            interactionInstance.InstanceActor.RemoveAlarm(alarms[0]);
-                                        }
-                                    }, outfitAssignment.SpecialOutfitKey, AlarmType.DeleteOnReset);
-                                break;
+                            OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == outfitAssignment.SimDescription);
+                            OutfitAssignmentUtils.PreviousOutfits.Add(new OutfitAssignmentUtils.Outfit
+                                {
+                                    Category = interactionInstance.InstanceActor.CurrentOutfitCategory,
+                                    Index = interactionInstance.InstanceActor.CurrentOutfitIndex,
+                                    SimDescription = outfitAssignment.SimDescription
+                                });
+                        }
+                        if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted)
+                        {
+                            interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                         }
                     }
                 };
             InteractionInstanceAdditions.OnInteractionEnded += (interactionInstance) =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
+                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
                     {
                         interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                     }

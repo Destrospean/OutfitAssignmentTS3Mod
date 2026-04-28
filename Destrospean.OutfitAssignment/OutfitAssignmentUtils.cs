@@ -15,6 +15,8 @@ namespace Destrospean.OutfitAssignment
         [PersistableStatic(true)]
         public static List<Outfit> PreviousOutfits = new List<Outfit>();
 
+        public static List<SimDescription> TimeToChangeBackList = new List<SimDescription>();
+
         [Persistable]
         public class Outfit
         {
@@ -66,9 +68,9 @@ namespace Destrospean.OutfitAssignment
                 if (outfitAssignment.SimDescription == simDescription)
                 {
                     OutfitAssignments.Remove(outfitAssignment);
-                    if (removeSpecialOutfits)
+                    if (removeSpecialOutfits && simDescription.HasSpecialOutfit(outfitAssignment.SpecialOutfitKey))
                     {
-                        simDescription.RemoveSpecialOutfit(outfitAssignment.InteractionInstanceType);
+                        simDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
                     }
                 }
             }
@@ -81,16 +83,6 @@ namespace Destrospean.OutfitAssignment
                 return;
             }
             int specialOutfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
-            if (sim.CurrentOutfitCategory != OutfitCategories.Special || sim.CurrentOutfitIndex != specialOutfitIndex)
-            {
-                PreviousOutfits.RemoveAll(x => x.SimDescription == sim.SimDescription);
-                PreviousOutfits.Insert(0, new Outfit
-                    {
-                        Category = sim.CurrentOutfitCategory,
-                        Index = sim.CurrentOutfitIndex,
-                        SimDescription = sim.SimDescription
-                    });
-            }
             if (spin)
             {
                 sim.SwitchToOutfitWithSpin(OutfitCategories.Special, specialOutfitIndex);
@@ -103,6 +95,7 @@ namespace Destrospean.OutfitAssignment
 
         public static void SwitchToPreviousOutfit(this Sims3.Gameplay.Actors.Sim sim, bool spin = true)
         {
+            TimeToChangeBackList.Add(sim.SimDescription);
             int previousOutfitIndex = OutfitAssignmentUtils.PreviousOutfits.FindIndex(x => x.SimDescription == sim.SimDescription);
             if (previousOutfitIndex > -1)
             {
@@ -119,6 +112,7 @@ namespace Destrospean.OutfitAssignment
                 }
                 OutfitAssignmentUtils.PreviousOutfits.RemoveAt(previousOutfitIndex);
             }
+            TimeToChangeBackList.RemoveAll(x => x == sim.SimDescription);
         }
 
         public static bool TryGetOutfitAssignment(this SimDescription simDescription, Sims3.Gameplay.Interactions.InteractionInstance interactionInstance, out OutfitAssignment outfitAssignment)
