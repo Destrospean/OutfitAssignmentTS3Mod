@@ -1,6 +1,7 @@
 ﻿using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
+using Sims3.SimIFace.CAS;
 
 namespace Destrospean.OutfitAssignment
 {
@@ -15,9 +16,9 @@ namespace Destrospean.OutfitAssignment
             {
                 Sim sim = (Sim)(object)this;
                 OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) && !OutfitAssignmentUtils.TimeToChangeBackList.Contains(outfitAssignment.SimDescription))
+                if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) && !OutfitAssignmentUtils.TimeToChangeBackList.Contains(sim.SimDescription))
                 {
-                    spin = new Sim.SwitchOutfitHelper(sim, Sims3.SimIFace.CAS.OutfitCategories.Special, sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                    spin = new Sim.SwitchOutfitHelper(sim, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
                 }
                 spin.Start();
                 spin.Wait(true);
@@ -38,10 +39,9 @@ namespace Destrospean.OutfitAssignment
                         else
                         {
                             StateMachineClient stateMachineClient = StateMachineClient.Acquire(sim, "solo_generic");
-                            string text = (mirrored ? "_mirrored" : "") + (sim.IsHuman ? "" : "_x");
                             if (string.IsNullOrEmpty(spin.OverrideAnimation))
                             {
-                                stateMachineClient.SetParameter("AnimationName", "a_clothesChange" + text, sim.IsHuman ? ProductVersion.BaseGame : ProductVersion.EP5);
+                                stateMachineClient.SetParameter("AnimationName", "a_clothesChange" + (mirrored ? "_mirrored" : "") + (sim.IsHuman ? "" : "_x"), sim.IsHuman ? ProductVersion.BaseGame : ProductVersion.EP5);
                             }
                             else
                             {
@@ -140,7 +140,7 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment))
                     {
-                        if (interactionInstance.InstanceActor.CurrentOutfitCategory != Sims3.SimIFace.CAS.OutfitCategories.Special || interactionInstance.InstanceActor.CurrentOutfitIndex != outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)))
+                        if (interactionInstance.InstanceActor.CurrentOutfitCategory != OutfitCategories.Special || interactionInstance.InstanceActor.CurrentOutfitIndex != outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)))
                         {
                             OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == outfitAssignment.SimDescription);
                             OutfitAssignmentUtils.PreviousOutfits.Add(new OutfitAssignmentUtils.Outfit
@@ -214,6 +214,7 @@ namespace Destrospean.OutfitAssignment
         {
             if (sim != null)
             {
+                sim.AddInteraction(Interactions.AssignOutfitCategoryToInteraction.Singleton, true);
                 sim.AddInteraction(Interactions.AssignOutfitToInteraction.Singleton, true);
                 sim.AddInteraction(Interactions.ConfigureOutfitAssignment.Singleton, true);
                 sim.AddInteraction(Interactions.CopyAssignedOutfitToInteraction.Singleton, true);

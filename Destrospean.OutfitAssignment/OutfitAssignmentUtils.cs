@@ -9,6 +9,8 @@ namespace Destrospean.OutfitAssignment
 {
     public static class OutfitAssignmentUtils
     {
+        public const string OutfitAssignmentCategoryPrefix = "OutfitAssignment_Category_";
+
         [PersistableStatic(true)]
         public static List<OutfitAssignment> OutfitAssignments = new List<OutfitAssignment>();
 
@@ -82,14 +84,25 @@ namespace Destrospean.OutfitAssignment
             {
                 return;
             }
-            int specialOutfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
-            if (spin)
+            OutfitCategories outfitCategory;
+            int outfitIndex;
+            if (outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentCategoryPrefix))
             {
-                sim.SwitchToOutfitWithSpin(OutfitCategories.Special, specialOutfitIndex);
+                outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentCategoryPrefix.Length)); 
+                outfitIndex = 0;
             }
             else
             {
-                sim.SwitchToOutfitWithoutSpin(OutfitCategories.Special, specialOutfitIndex);
+                outfitCategory = OutfitCategories.Special;
+                outfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
+            }
+            if (spin)
+            {
+                sim.SwitchToOutfitWithSpin(outfitCategory, outfitIndex);
+            }
+            else
+            {
+                sim.SwitchToOutfitWithoutSpin(outfitCategory, outfitIndex);
             }
         }
 
