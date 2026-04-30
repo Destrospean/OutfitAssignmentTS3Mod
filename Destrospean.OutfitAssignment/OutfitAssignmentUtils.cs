@@ -4,11 +4,15 @@ using Sims3.Gameplay.ActorSystems;
 using Sims3.Gameplay.CAS;
 using Sims3.SimIFace;
 using Sims3.SimIFace.CAS;
+using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
 
 namespace Destrospean.OutfitAssignment
 {
     public static class OutfitAssignmentUtils
     {
+        [PersistableStatic(true)]
+        public static Dictionary<string, SimOutfit> GlobalAssignedOutfits = new Dictionary<string, SimOutfit>();
+
         public const string OutfitAssignmentCategoryPrefix = "OutfitAssignment_Category_";
 
         [PersistableStatic(true)]
@@ -84,6 +88,11 @@ namespace Destrospean.OutfitAssignment
             return OutfitAssignments.FindAll(x => x.SimDescription == simDescription).ToArray();
         }
 
+        public static string GetGlobalAssignedOutfitPrefix(this Sims3.Gameplay.Actors.Sim sim)
+        {
+            return "OutfitAssignment_Global_" + Sims3.Gameplay.CAS.OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + Sims3.Gameplay.CAS.OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + "_";
+        }
+
         public static void RemoveAllOutfitAssignments(this SimDescription simDescription, bool removeSpecialOutfits = false)
         {
             foreach (OutfitAssignment outfitAssignment in new List<OutfitAssignment>(OutfitAssignments))
@@ -110,10 +119,19 @@ namespace Destrospean.OutfitAssignment
             if (outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentCategoryPrefix))
             {
                 outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentCategoryPrefix.Length));
-                outfitIndex = 0;
+                outfitIndex = Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(outfitCategory) - 1) : 0;
             }
             else
             {
+                SimOutfit outfit;
+                if (outfitAssignment.SimDescription == null && Sims3.Gameplay.CAS.OutfitUtils.TryApplyUniformToOutfit(sim.CurrentOutfit, OutfitAssignmentUtils.GlobalAssignedOutfits[outfitAssignment.SpecialOutfitKey], sim.SimDescription, outfitAssignment.SpecialOutfitKey, out outfit))
+                {
+                    if (sim.SimDescription.HasSpecialOutfit(outfitAssignment.SpecialOutfitKey))
+                    {
+                        sim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
+                    }
+                    sim.SimDescription.AddSpecialOutfit(outfit, outfitAssignment.SpecialOutfitKey);
+                }
                 outfitCategory = OutfitCategories.Special;
                 outfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
             }

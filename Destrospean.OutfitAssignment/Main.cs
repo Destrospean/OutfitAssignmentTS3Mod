@@ -2,6 +2,7 @@
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
 using Sims3.SimIFace.CAS;
+using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
 
 namespace Destrospean.OutfitAssignment
 {
@@ -12,15 +13,94 @@ namespace Destrospean.OutfitAssignment
 
         public class SimPatch
         {
+            public void GetCategoryAndIndexToUse(Sim.ClothesChangeReason reason, ref OutfitCategories category, out int index)
+            {
+                Sim sim = (Sim)(object)this;
+                index = -1;
+                if (sim.SimDescription.IsVisuallyPregnant && category == OutfitCategories.Outerwear && sim.SimDescription.GetOutfitCount(category) < 1)
+                {
+                    sim.CreateRandomOuterwear();
+                    index = 0;
+                    return;
+                }
+                if ((sim.SimDescription.IsVisuallyPregnant || sim.SimDescription.GetOutfitCount(category) > 0) && category != 0)
+                {
+                    index = category == OutfitCategories.Career ? sim.SimDescription.CareerOutfitIndex : Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(category) - 1) : 0;
+                    if (sim.BuffManager != null && sim.BuffManager.TransformBuffInst != null)
+                    {
+                        sim.BuffManager.TransformBuffInst.GenerateTransformOutfit(sim.SimDescription.GetOutfit(category, index));
+                    }
+                    return;
+                }
+                index = Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(category) - 1) : 0;
+                switch (category)
+                {
+                    case OutfitCategories.Naked:
+                    case OutfitCategories.Everyday:
+                    case OutfitCategories.Formalwear:
+                    case OutfitCategories.Sleepwear:
+                    case OutfitCategories.Swimwear:
+                    case OutfitCategories.Athletic:
+                    case OutfitCategories.Career:
+                        {
+                            SimBuilder simBuilder = new SimBuilder
+                                {
+                                    TextureSize = 1024,
+                                    UseCompression = true
+                                };
+                            SimOutfit newOutfit = null;
+                            Sims3.Gameplay.CAS.OutfitUtils.MakeCategoryOutfitUsingEveryday(simBuilder, category, sim.SimDescription, ref newOutfit);
+                            simBuilder.Dispose();
+                            break;
+                        }
+                    case OutfitCategories.Outerwear:
+                        if (GameUtils.IsInstalled(ProductVersion.EP8))
+                        {
+                            sim.CreateRandomOuterwear();
+                        }
+                        else
+                        {
+                            category = OutfitCategories.Everyday;
+                        }
+                        break;
+                    case OutfitCategories.Special:
+                        if (reason == Sim.ClothesChangeReason.GoingToBed)
+                        {
+                            int tempIndex;
+                            if (Sims3.Gameplay.Situations.SlumberParty.ShouldWearSlumberPartyPajama(sim, out tempIndex))
+                            {
+                                index = tempIndex;
+                            }
+                        }
+                        break;
+                    default:
+                        category = OutfitCategories.Everyday;
+                        break;
+                }
+            }
+
             public bool SwitchToOutfitWithSpin(Sim.SwitchOutfitHelper spin, bool mirrored)
             {
                 Sim sim = (Sim)(object)this;
                 OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) && !OutfitAssignmentUtils.TimeToChangeBackList.Contains(sim.SimDescription))
+                if (!OutfitAssignmentUtils.TimeToChangeBackList.Contains(sim.SimDescription))
                 {
-                    OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special;
-                    sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
-                    spin = new Sim.SwitchOutfitHelper(sim, outfitCategory, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                    bool isGlobal = false;
+                    if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) || (isGlobal = OutfitAssignmentUtils.TryGetOutfitAssignment(null, sim.CurrentInteraction, out outfitAssignment)))
+                    {
+                        SimOutfit outfit;
+                        if (isGlobal && Sims3.Gameplay.CAS.OutfitUtils.TryApplyUniformToOutfit(sim.CurrentOutfit, OutfitAssignmentUtils.GlobalAssignedOutfits[outfitAssignment.SpecialOutfitKey], sim.SimDescription, outfitAssignment.SpecialOutfitKey, out outfit))
+                        {
+                            if (sim.SimDescription.HasSpecialOutfit(outfitAssignment.SpecialOutfitKey))
+                            {
+                                sim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
+                            }
+                            sim.SimDescription.AddSpecialOutfit(outfit, outfitAssignment.SpecialOutfitKey);
+                        }
+                        OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special;
+                        sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
+                        spin = new Sim.SwitchOutfitHelper(sim, outfitCategory, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(outfitCategory) - 1) : 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                    }
                 }
                 spin.Start();
                 spin.Wait(true);
@@ -69,15 +149,28 @@ namespace Destrospean.OutfitAssignment
         static Main()
         {
             InteractionInstanceTypeUtils.InitInteractionInstanceTypes();
+            InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("GetCategoryAndIndexToUse", System.Array.ConvertAll(typeof(SimPatch).GetMethod("GetCategoryAndIndexToUse").GetParameters(), x => x.ParameterType)), typeof(SimPatch).GetMethod("GetCategoryAndIndexToUse"));
             InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("SwitchToOutfitWithSpin", System.Array.ConvertAll(typeof(SimPatch).GetMethod("SwitchToOutfitWithSpin").GetParameters(), x => x.ParameterType)), typeof(SimPatch).GetMethod("SwitchToOutfitWithSpin"));
             EventListener simAgeTransitionListener = null,
             simDescriptionDisposedListener = null,
             simInstantiatedListener = null;
+            World.sOnObjectPlacedInLotEventHandler += (sender, e) =>
+                {
+                    World.OnObjectPlacedInLotEventArgs onObjectPlacedInLotEventArgs = e as World.OnObjectPlacedInLotEventArgs;
+                    if (onObjectPlacedInLotEventArgs != null)
+                    {
+                        AddInteractions(Sims3.Gameplay.Abstracts.GameObject.GetObject(onObjectPlacedInLotEventArgs.ObjectId) as Sims3.Gameplay.Objects.ShelvesStorage.Dresser);
+                    }
+                };
             World.sOnWorldLoadFinishedEventHandler += (sender, e) =>
                 {
                     foreach (Sim sim in Sims3.Gameplay.Queries.GetObjects<Sim>())
                     {
                         AddInteractions(sim);
+                    }
+                    foreach (Sims3.Gameplay.Objects.ShelvesStorage.Dresser dresser in Sims3.Gameplay.Queries.GetObjects<Sims3.Gameplay.Objects.ShelvesStorage.Dresser>())
+                    {
+                        AddInteractions(dresser);
                     }
                     simAgeTransitionListener = EventTracker.AddListener(EventTypeId.kSimAgeTransition, evt =>
                         {
@@ -140,7 +233,7 @@ namespace Destrospean.OutfitAssignment
             InteractionInstanceAdditions.OnInteractedStarted += (interactionInstance) =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment))
+                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)))
                     {
                         if (interactionInstance.InstanceActor.CurrentOutfitCategory != OutfitCategories.Special || interactionInstance.InstanceActor.CurrentOutfitIndex != outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)))
                         {
@@ -161,7 +254,7 @@ namespace Destrospean.OutfitAssignment
             InteractionInstanceAdditions.OnInteractionEnded += (interactionInstance) =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
+                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
                     {
                         interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                     }
@@ -169,7 +262,7 @@ namespace Destrospean.OutfitAssignment
             InteractionInstanceAdditions.OnWaitForSynchronizationLevel += (interactionInstance, syncLevel) =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment))
+                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)))
                     {
                         switch (syncLevel)
                         {
@@ -197,7 +290,7 @@ namespace Destrospean.OutfitAssignment
             InteractionInstanceAdditions.StandardEntryPreCallCallback += (interactionInstance) =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardEntry)
+                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)) && outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardEntry)
                     {
                         interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                     }
@@ -205,24 +298,24 @@ namespace Destrospean.OutfitAssignment
             InteractionInstanceAdditions.StandardExitPostCallCallback += (interactionInstance) =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardExit)
+                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardExit)
                     {
                         interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                     }
                 };
         }
 
-        static void AddInteractions(Sim sim)
+        static void AddInteractions(Sims3.Gameplay.Abstracts.GameObject gameObject)
         {
-            if (sim != null)
+            if (gameObject != null)
             {
-                sim.AddInteraction(Interactions.AssignOutfitCategoryToInteraction.Singleton, true);
-                sim.AddInteraction(Interactions.AssignOutfitToInteraction.Singleton, true);
-                sim.AddInteraction(Interactions.ConfigureOutfitAssignment.Singleton, true);
-                sim.AddInteraction(Interactions.CopyAssignedOutfitToInteraction.Singleton, true);
-                sim.AddInteraction(Interactions.EditAssignedOutfit.Singleton, true);
-                sim.AddInteraction(Interactions.ExtendAssignedOutfitToInteraction.Singleton, true);
-                sim.AddInteraction(Interactions.UnassignOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(Interactions.AssignOutfitCategoryToInteraction.Singleton, true);
+                gameObject.AddInteraction(Interactions.AssignOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(Interactions.ConfigureOutfitAssignment.Singleton, true);
+                gameObject.AddInteraction(Interactions.CopyAssignedOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(Interactions.EditAssignedOutfit.Singleton, true);
+                gameObject.AddInteraction(Interactions.ExtendAssignedOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(Interactions.UnassignOutfitToInteraction.Singleton, true);
             }
         }
     }
