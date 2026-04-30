@@ -2,6 +2,7 @@
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
 using Sims3.SimIFace.CAS;
+using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
 
 namespace Destrospean.OutfitAssignment
 {
@@ -12,6 +13,72 @@ namespace Destrospean.OutfitAssignment
 
         public class SimPatch
         {
+            public void GetCategoryAndIndexToUse(Sim.ClothesChangeReason reason, ref OutfitCategories category, out int index)
+            {
+                Sim sim = (Sim)(object)this;
+                index = -1;
+                if (sim.SimDescription.IsVisuallyPregnant && category == OutfitCategories.Outerwear && sim.SimDescription.GetOutfitCount(category) < 1)
+                {
+                    sim.CreateRandomOuterwear();
+                    index = 0;
+                    return;
+                }
+                if ((sim.SimDescription.IsVisuallyPregnant || sim.SimDescription.GetOutfitCount(category) > 0) && category != 0)
+                {
+                    index = category == OutfitCategories.Career ? sim.SimDescription.CareerOutfitIndex : Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(category) - 1) : 0;
+                    if (sim.BuffManager != null && sim.BuffManager.TransformBuffInst != null)
+                    {
+                        sim.BuffManager.TransformBuffInst.GenerateTransformOutfit(sim.SimDescription.GetOutfit(category, index));
+                    }
+                    return;
+                }
+                index = Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(category) - 1) : 0;
+                switch (category)
+                {
+                    case OutfitCategories.Naked:
+                    case OutfitCategories.Everyday:
+                    case OutfitCategories.Formalwear:
+                    case OutfitCategories.Sleepwear:
+                    case OutfitCategories.Swimwear:
+                    case OutfitCategories.Athletic:
+                    case OutfitCategories.Career:
+                        {
+                            SimBuilder simBuilder = new SimBuilder
+                                {
+                                    TextureSize = 1024,
+                                    UseCompression = true
+                                };
+                            SimOutfit newOutfit = null;
+                            Sims3.Gameplay.CAS.OutfitUtils.MakeCategoryOutfitUsingEveryday(simBuilder, category, sim.SimDescription, ref newOutfit);
+                            simBuilder.Dispose();
+                            break;
+                        }
+                    case OutfitCategories.Outerwear:
+                        if (GameUtils.IsInstalled(ProductVersion.EP8))
+                        {
+                            sim.CreateRandomOuterwear();
+                        }
+                        else
+                        {
+                            category = OutfitCategories.Everyday;
+                        }
+                        break;
+                    case OutfitCategories.Special:
+                        if (reason == Sim.ClothesChangeReason.GoingToBed)
+                        {
+                            int tempIndex;
+                            if (Sims3.Gameplay.Situations.SlumberParty.ShouldWearSlumberPartyPajama(sim, out tempIndex))
+                            {
+                                index = tempIndex;
+                            }
+                        }
+                        break;
+                    default:
+                        category = OutfitCategories.Everyday;
+                        break;
+                }
+            }
+
             public bool SwitchToOutfitWithSpin(Sim.SwitchOutfitHelper spin, bool mirrored)
             {
                 Sim sim = (Sim)(object)this;
@@ -20,7 +87,7 @@ namespace Destrospean.OutfitAssignment
                 {
                     OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special;
                     sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
-                    spin = new Sim.SwitchOutfitHelper(sim, outfitCategory, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                    spin = new Sim.SwitchOutfitHelper(sim, outfitCategory, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(outfitCategory) - 1) : 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
                 }
                 spin.Start();
                 spin.Wait(true);
