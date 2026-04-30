@@ -1,5 +1,7 @@
-﻿using Sims3.Gameplay.Actors;
+﻿using System;
+using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.Interactions;
+using Sims3.Gameplay.Objects;
 using Sims3.Gameplay.Utilities;
 
 namespace Destrospean
@@ -48,15 +50,15 @@ namespace Destrospean
                     {
                         if (!(interactionInstance is IRouteFromInventoryOrSelfWithoutCarrying) && !(interactionInstance is IImmediateInteraction))
                         {
-                            if (!(interactionInstance.Target is Sims3.Gameplay.Objects.Cane))
+                            if (!(interactionInstance.Target is Cane))
                             {
                                 interactionInstance.InstanceActor.PopCanePostureIfNecessary();
                             }
-                            if (!(interactionInstance.Target is Sims3.Gameplay.Objects.Umbrella))
+                            if (!(interactionInstance.Target is Umbrella))
                             {
-                                Sims3.Gameplay.Objects.Umbrella.PopUmbrellaPostureIfNecessary(interactionInstance.InstanceActor, false);
+                                Umbrella.PopUmbrellaPostureIfNecessary(interactionInstance.InstanceActor, false);
                             }
-                            if (!(interactionInstance.Target is Sims3.Gameplay.Objects.Backpack))
+                            if (!(interactionInstance.Target is Backpack))
                             {
                                 interactionInstance.InstanceActor.PopBackpackPostureIfNecessary();
                             }
@@ -72,7 +74,7 @@ namespace Destrospean
                         succeeded = interactionInstance.Run();
                     }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     if (interactionInstance.InstanceActor != null && !ex.Data.Contains("Actor"))
                     {
@@ -127,7 +129,7 @@ namespace Destrospean
                     OnInteractionEnded(interactionInstance);
                     return succeeded;
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     if (interactionInstance.InstanceActor != null && !ex.Data.Contains("Actor"))
                     {
@@ -263,23 +265,21 @@ namespace Destrospean
         
         static InteractionInstanceAdditions()
         {
-            ReplaceMethod(typeof(InteractionInstance).GetMethod("RunInteractionWithoutCleanup", System.Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("RunInteractionWithoutCleanup").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("RunInteractionWithoutCleanup"));
-            ReplaceMethod(typeof(InteractionInstance).GetMethod("StandardEntry", System.Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("StandardEntry").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("StandardEntry"));
-            ReplaceMethod(typeof(InteractionInstance).GetMethod("StandardExit", System.Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("StandardExit").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("StandardExit"));
-            ReplaceMethod(typeof(Sim).GetMethod("WaitForSynchronizationLevelWithSim", System.Array.ConvertAll(typeof(SimPatch).GetMethod("WaitForSynchronizationLevelWithSim").GetParameters(), x => x.ParameterType)), typeof(SimPatch).GetMethod("WaitForSynchronizationLevelWithSim"));
+            ReplaceMethod(typeof(InteractionInstance).GetMethod("RunInteractionWithoutCleanup", Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("RunInteractionWithoutCleanup").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("RunInteractionWithoutCleanup"));
+            ReplaceMethod(typeof(InteractionInstance).GetMethod("StandardEntry", Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("StandardEntry").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("StandardEntry"));
+            ReplaceMethod(typeof(InteractionInstance).GetMethod("StandardExit", Array.ConvertAll(typeof(InteractionInstancePatch).GetMethod("StandardExit").GetParameters(), x => x.ParameterType)), typeof(InteractionInstancePatch).GetMethod("StandardExit"));
+            ReplaceMethod(typeof(Sim).GetMethod("WaitForSynchronizationLevelWithSim", Array.ConvertAll(typeof(SimPatch).GetMethod("WaitForSynchronizationLevelWithSim").GetParameters(), x => x.ParameterType)), typeof(SimPatch).GetMethod("WaitForSynchronizationLevelWithSim"));
         }
 
+        /// <summary>This method was borrowed from Lazy Duchess' Mono Patcher</summary>
         public static void ReplaceMethod(System.Reflection.MethodInfo oldMethod, System.Reflection.MethodInfo newMethod)
         {
-            // This code was borrowed from Lazy Duchess' Mono Patcher
             unsafe
             {
-                System.IntPtr newMethodHandle = newMethod.MethodHandle.Value,
-                oldMethodHandle = oldMethod.MethodHandle.Value;
                 byte[] replacementByteArray = new byte[40];
-                System.Runtime.InteropServices.Marshal.Copy(newMethodHandle, replacementByteArray, 0, 40);
-                System.Runtime.InteropServices.Marshal.Copy(replacementByteArray, 0, oldMethodHandle, 24);
-                System.Runtime.InteropServices.Marshal.Copy(replacementByteArray, 28, new System.IntPtr(oldMethodHandle.ToInt32() + 28), 12);
+                System.Runtime.InteropServices.Marshal.Copy(newMethod.MethodHandle.Value, replacementByteArray, 0, 40);
+                System.Runtime.InteropServices.Marshal.Copy(replacementByteArray, 0, oldMethod.MethodHandle.Value, 24);
+                System.Runtime.InteropServices.Marshal.Copy(replacementByteArray, 28, new IntPtr(oldMethod.MethodHandle.Value.ToInt32() + 28), 12);
             }
         }
     }

@@ -18,7 +18,9 @@ namespace Destrospean.OutfitAssignment
                 OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                 if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) && !OutfitAssignmentUtils.TimeToChangeBackList.Contains(sim.SimDescription))
                 {
-                    spin = new Sim.SwitchOutfitHelper(sim, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                    OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special;
+                    sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
+                    spin = new Sim.SwitchOutfitHelper(sim, outfitCategory, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
                 }
                 spin.Start();
                 spin.Wait(true);

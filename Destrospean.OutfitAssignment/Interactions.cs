@@ -66,24 +66,24 @@ namespace Destrospean.OutfitAssignment
                             OutfitCategories.Formalwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Athletic"),
-                            OutfitCategories.Athletic.ToString()
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:Sleepwear"),
+                            OutfitCategories.Sleepwear.ToString()
                         },
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:Swimwear"),
                             OutfitCategories.Swimwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Sleepwear"),
-                            OutfitCategories.Sleepwear.ToString()
-                        },
-                        {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Outerwear"),
-                            OutfitCategories.Outerwear.ToString()
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:Athletic"),
+                            OutfitCategories.Athletic.ToString()
                         },
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:Career"),
                             OutfitCategories.Career.ToString()
+                        },
+                        {
+                            Common.Localize(target.IsFemale, localizationKey + "/Options:Outerwear"),
+                            OutfitCategories.Outerwear.ToString()
                         },
                         {
                             Common.Localize(target.IsFemale, localizationKey + "/Options:MartialArts"),

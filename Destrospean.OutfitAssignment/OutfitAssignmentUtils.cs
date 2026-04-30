@@ -58,6 +58,27 @@ namespace Destrospean.OutfitAssignment
             OutfitAssignments.Add(new OutfitAssignment(simDescription, specialOutfitKey, interactionInstanceType, entryCallbackType, exitCallbackType));
         }
 
+        public static void CreateOutfitForCategoryIfNecessary(this SimDescription simDescription, OutfitCategories outfitCategory)
+        {
+            switch (outfitCategory)
+            {
+                case OutfitCategories.Singed:
+                    BuffSinged.SetupSingedOutfit(simDescription.CreatedSim);
+                    break;
+                case OutfitCategories.SkinnyDippingTowel:
+                    simDescription.RemoveOutfits(OutfitCategories.SkinnyDippingTowel, true);
+                    if (simDescription.HasSpecialOutfit("SkinnyDipTowel"))
+                    {
+                        simDescription.AddOutfit(simDescription.GetSpecialOutfit("SkinnyDipTowel"), OutfitCategories.SkinnyDippingTowel, true);
+                    }
+                    else
+                    {
+                        OutfitUtils.CreateOutfitForSim(simDescription, ResourceKey.CreateOutfitKeyFromProductVersion((simDescription.IsMale ? "m" : "f") + OutfitUtils.GetAgePrefix(simDescription.Age, true) + "_towel", ProductVersion.EP3), OutfitCategories.SkinnyDippingTowel, OutfitCategories.Swimwear, true);
+                    }
+                    break;
+            }
+        }
+
         public static OutfitAssignment[] GetAllOutfitAssignments(this SimDescription simDescription)
         {
             return OutfitAssignments.FindAll(x => x.SimDescription == simDescription).ToArray();
@@ -88,7 +109,7 @@ namespace Destrospean.OutfitAssignment
             int outfitIndex;
             if (outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentCategoryPrefix))
             {
-                outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentCategoryPrefix.Length)); 
+                outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentCategoryPrefix.Length));
                 outfitIndex = 0;
             }
             else
@@ -96,6 +117,7 @@ namespace Destrospean.OutfitAssignment
                 outfitCategory = OutfitCategories.Special;
                 outfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
             }
+            sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
             if (spin)
             {
                 sim.SwitchToOutfitWithSpin(outfitCategory, outfitIndex);
