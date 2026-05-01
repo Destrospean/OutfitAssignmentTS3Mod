@@ -463,7 +463,11 @@ namespace Destrospean.OutfitAssignment
                     }
                     if (targetSim == null && OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(specialOutfitKey))
                     {
-                        Actor.SimDescription.AddSpecialOutfit(OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey], specialOutfitKey);
+                        SimOutfit outfit;
+                        if (Sims3.Gameplay.CAS.OutfitUtils.TryApplyUniformToOutfit(Actor.CurrentOutfit, OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey], Actor.SimDescription, specialOutfitKey, out outfit))
+                        {
+                            Actor.SimDescription.AddSpecialOutfit(outfit, specialOutfitKey);
+                        }
                     }
                     if ((targetSim ?? Actor).EditSpecialOutfit(specialOutfitKey))
                     {
