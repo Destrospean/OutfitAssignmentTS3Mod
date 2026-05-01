@@ -90,7 +90,7 @@ namespace Destrospean.OutfitAssignment
 
         public static string GetGlobalAssignedOutfitPrefix(this Sims3.Gameplay.Actors.Sim sim)
         {
-            return "OutfitAssignment_Global_" + Sims3.Gameplay.CAS.OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + Sims3.Gameplay.CAS.OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + "_";
+            return "OutfitAssignment_Global_" + OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + "_";
         }
 
         public static void RemoveAllOutfitAssignments(this SimDescription simDescription, bool removeSpecialOutfits = false)
@@ -124,7 +124,7 @@ namespace Destrospean.OutfitAssignment
             else
             {
                 SimOutfit outfit;
-                if (outfitAssignment.SimDescription == null && Sims3.Gameplay.CAS.OutfitUtils.TryApplyUniformToOutfit(sim.CurrentOutfit, OutfitAssignmentUtils.GlobalAssignedOutfits[outfitAssignment.SpecialOutfitKey], sim.SimDescription, outfitAssignment.SpecialOutfitKey, out outfit))
+                if (outfitAssignment.SimDescription == null && OutfitUtils.TryApplyUniformToOutfit(sim.CurrentOutfit, GlobalAssignedOutfits[outfitAssignment.SpecialOutfitKey], sim.SimDescription, outfitAssignment.SpecialOutfitKey, out outfit))
                 {
                     if (sim.SimDescription.HasSpecialOutfit(outfitAssignment.SpecialOutfitKey))
                     {
