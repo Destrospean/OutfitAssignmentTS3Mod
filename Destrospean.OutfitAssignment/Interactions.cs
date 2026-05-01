@@ -46,7 +46,7 @@ namespace Destrospean.OutfitAssignment
                 Type[] selectedInteractionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
                 OutfitCategories outfitCategory;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, out exitCallbackType) && TryGetOutfitCategory(targetSim, out outfitCategory))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, out exitCallbackType) && TryGetOutfitCategory(targetSim, selectedInteractionInstanceTypes[0], out outfitCategory))
                 {
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
@@ -56,8 +56,9 @@ namespace Destrospean.OutfitAssignment
                 return true;
             }
 
-            public static bool TryGetOutfitCategory(Sim sim, out OutfitCategories outfitCategory)
+            public static bool TryGetOutfitCategory(Sim sim, Type interactionInstanceType, out OutfitCategories outfitCategory)
             {
+                OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                 string localizationKey = "/Dialogs/OutfitCategoryDialog",
                 text = Dialogs.ComboSelectionDialog.Show(Common.Localize(sim != null && sim.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new AssignOutfitToInteraction.DummyComparer())
                     {
@@ -109,7 +110,7 @@ namespace Destrospean.OutfitAssignment
                             Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SkinnyDippingTowel"),
                             OutfitCategories.SkinnyDippingTowel.ToString()
                         }
-                    }, OutfitCategories.Everyday.ToString()) as string;
+                    }, sim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length) : OutfitCategories.Everyday.ToString()) as string;
                 if (text == null)
                 {
                     outfitCategory = OutfitCategories.None;
