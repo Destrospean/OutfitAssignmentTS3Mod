@@ -149,21 +149,21 @@ namespace Destrospean.OutfitAssignment
         public static void SwitchToPreviousOutfit(this Sims3.Gameplay.Actors.Sim sim, bool spin = true)
         {
             TimeToChangeBackList.Add(sim.SimDescription);
-            int previousOutfitIndex = OutfitAssignmentUtils.PreviousOutfits.FindIndex(x => x.SimDescription == sim.SimDescription);
+            int previousOutfitIndex = PreviousOutfits.FindIndex(x => x.SimDescription == sim.SimDescription);
             if (previousOutfitIndex > -1)
             {
                 if (!sim.BuffManager.HasElement(BuffNames.Singed) && !sim.BuffManager.HasElement(BuffNames.SingedElectricity) && !sim.BuffManager.HasElement(BuffNames.EmbarrassedClothesHidden) && !sim.BuffManager.DisallowClothesChange() && !sim.OccultManager.DisallowClothesChange())
                 {
                     if (spin)
                     {
-                        sim.SwitchToOutfitWithSpin(OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Category, OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Index);
+                        sim.SwitchToOutfitWithSpin(PreviousOutfits[previousOutfitIndex].Category, PreviousOutfits[previousOutfitIndex].Index);
                     }
                     else
                     {
-                        sim.SwitchToOutfitWithoutSpin(OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Category, OutfitAssignmentUtils.PreviousOutfits[previousOutfitIndex].Index);
+                        sim.SwitchToOutfitWithoutSpin(PreviousOutfits[previousOutfitIndex].Category, PreviousOutfits[previousOutfitIndex].Index);
                     }
                 }
-                OutfitAssignmentUtils.PreviousOutfits.RemoveAt(previousOutfitIndex);
+                PreviousOutfits.RemoveAt(previousOutfitIndex);
             }
             TimeToChangeBackList.RemoveAll(x => x == sim.SimDescription);
         }
