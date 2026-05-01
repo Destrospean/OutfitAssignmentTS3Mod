@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.ActorSystems;
 using Sims3.Gameplay.CAS;
 using Sims3.SimIFace;
@@ -10,6 +11,29 @@ namespace Destrospean.OutfitAssignment
 {
     public static class OutfitAssignmentUtils
     {
+        public static readonly BodyTypes[] ClothingTypes =
+            {
+                BodyTypes.Accessories,
+                BodyTypes.Armband,
+                BodyTypes.Bracelet,
+                BodyTypes.Earrings,
+                BodyTypes.FullBody,
+                BodyTypes.Glasses,
+                BodyTypes.Gloves,
+                BodyTypes.Hair,
+                BodyTypes.LeftEarring,
+                BodyTypes.LeftGarter,
+                BodyTypes.LowerBody,
+                BodyTypes.Necklace,
+                BodyTypes.NoseRing,
+                BodyTypes.RightEarring,
+                BodyTypes.RightGarter,
+                BodyTypes.Ring,
+                BodyTypes.Shoes,
+                BodyTypes.Socks,
+                BodyTypes.UpperBody
+            };
+
         [PersistableStatic(true)]
         public static Dictionary<string, SimOutfit> GlobalAssignedOutfits = new Dictionary<string, SimOutfit>();
 
@@ -56,6 +80,42 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
+        public static void AddGlobalAssignedOutfit(this Sim sim, string sourceSpecialOutfitKey, string destinationSpecialOutfitKey = null)
+        {
+            using (SimBuilder simBuilder = new SimBuilder
+                {
+                    UseCompression = true
+                })
+            {
+                simBuilder.PrepareForOutfit(sim.CurrentOutfit);
+                foreach (CASPart part in GlobalAssignedOutfits[sourceSpecialOutfitKey].Parts)
+                {
+                    if (Array.Exists(ClothingTypes, x => x == part.BodyType))
+                    {
+                        switch (part.BodyType)
+                        {
+                            case BodyTypes.FullBody:
+                                simBuilder.RemoveParts(BodyTypes.LowerBody, BodyTypes.UpperBody);
+                                break;
+                            case BodyTypes.LowerBody:
+                            case BodyTypes.UpperBody:
+                                simBuilder.RemoveParts(BodyTypes.FullBody);
+                                break;
+                        }
+                        simBuilder.RemoveParts(part.BodyType);
+                        simBuilder.AddPart(part);
+                        simBuilder.SetPartPresetString(part.Key, GlobalAssignedOutfits[sourceSpecialOutfitKey].GetPartPreset(part.Key));
+                    }
+                }
+                destinationSpecialOutfitKey = destinationSpecialOutfitKey ?? sourceSpecialOutfitKey;
+                if (sim.SimDescription.HasSpecialOutfit(destinationSpecialOutfitKey))
+                {
+                    sim.SimDescription.RemoveSpecialOutfit(destinationSpecialOutfitKey);
+                }
+                sim.SimDescription.AddSpecialOutfit(new SimOutfit(simBuilder.CacheOutfit(destinationSpecialOutfitKey + "_" + sim.SimDescription.SimDescriptionId)), destinationSpecialOutfitKey);
+            }
+        }
+
         public static void AssignOutfitToInteraction(this SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceTypeUtils.CallbackTypes entryCallbackType, InteractionInstanceTypeUtils.CallbackTypes exitCallbackType)
         {
             UnassignOutfitToInteraction(simDescription, interactionInstanceType);
@@ -88,7 +148,7 @@ namespace Destrospean.OutfitAssignment
             return OutfitAssignments.FindAll(x => x.SimDescription == simDescription).ToArray();
         }
 
-        public static string GetGlobalAssignedOutfitPrefix(this Sims3.Gameplay.Actors.Sim sim)
+        public static string GetGlobalAssignedOutfitPrefix(this Sim sim)
         {
             return "OutfitAssignment_Global_" + OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + "_";
         }
@@ -108,7 +168,7 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public static void SwitchToAssignedOutfit(this Sims3.Gameplay.Actors.Sim sim, OutfitAssignment outfitAssignment, bool spin = true)
+        public static void SwitchToAssignedOutfit(this Sim sim, OutfitAssignment outfitAssignment, bool spin = true)
         {
             if (sim.BuffManager.HasElement(BuffNames.Singed) || sim.BuffManager.HasElement(BuffNames.SingedElectricity) || sim.BuffManager.HasElement(BuffNames.EmbarrassedClothesHidden) || sim.BuffManager.DisallowClothesChange() || sim.OccultManager.DisallowClothesChange())
             {
@@ -146,7 +206,7 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public static void SwitchToPreviousOutfit(this Sims3.Gameplay.Actors.Sim sim, bool spin = true)
+        public static void SwitchToPreviousOutfit(this Sim sim, bool spin = true)
         {
             TimeToChangeBackList.Add(sim.SimDescription);
             int previousOutfitIndex = PreviousOutfits.FindIndex(x => x.SimDescription == sim.SimDescription);

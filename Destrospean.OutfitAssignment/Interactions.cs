@@ -182,11 +182,7 @@ namespace Destrospean.OutfitAssignment
                     }
                     if (targetSim == null && OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(specialOutfitKey))
                     {
-                        SimOutfit outfit;
-                        if (Sims3.Gameplay.CAS.OutfitUtils.TryApplyUniformToOutfit(Actor.CurrentOutfit, OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey], Actor.SimDescription, specialOutfitKey, out outfit))
-                        {
-                            Actor.SimDescription.AddSpecialOutfit(outfit, specialOutfitKey);
-                        }
+                        Actor.AddGlobalAssignedOutfit(specialOutfitKey);
                     }
                     if ((targetSim ?? Actor).EditSpecialOutfit(specialOutfitKey))
                     {
@@ -201,10 +197,7 @@ namespace Destrospean.OutfitAssignment
                     }
                     if (targetSim == null)
                     {
-                        SimBuilder simBuilder = new SimBuilder();
-                        simBuilder.PrepareForOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));
-                        simBuilder.RemoveParts(BodyTypes.AgeWeathering, BodyTypes.BodyHairCalves, BodyTypes.BodyHairFeet, BodyTypes.BodyHairForearms, BodyTypes.BodyHairFullBack, BodyTypes.BodyHairLowerBack, BodyTypes.BodyHairStomach, BodyTypes.BodyHairUpperBack, BodyTypes.BodyHairUpperChest, BodyTypes.Face, BodyTypes.Freckles, BodyTypes.Moles, BodyTypes.Scalp, BodyTypes.Tattoo, BodyTypes.TattooTemplate);
-                        OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey] = new SimOutfit(simBuilder.CacheOutfit(specialOutfitKey));
+                        OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey] = new SimOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey).Key);
                         if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                         {
                             Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
@@ -387,15 +380,11 @@ namespace Destrospean.OutfitAssignment
                     string destinationSpecialOutfitKey = (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID();
                     if (targetSim == null)
                     {
-                        OutfitAssignmentUtils.GlobalAssignedOutfits[destinationSpecialOutfitKey] = new SimOutfit(targetSim.SimDescription.GetSpecialOutfit(sourceSpecialOutfitKey).Key);
+                        OutfitAssignmentUtils.GlobalAssignedOutfits[destinationSpecialOutfitKey] = new SimOutfit(OutfitAssignmentUtils.GlobalAssignedOutfits[sourceSpecialOutfitKey].Key);
                     }
                     else
                     {
-                        SimOutfit outfit;
-                        if (Sims3.Gameplay.CAS.OutfitUtils.TryApplyUniformToOutfit(Actor.CurrentOutfit, OutfitAssignmentUtils.GlobalAssignedOutfits[destinationSpecialOutfitKey], Actor.SimDescription, destinationSpecialOutfitKey, out outfit))
-                        {
-                            Actor.SimDescription.AddSpecialOutfit(outfit, destinationSpecialOutfitKey);
-                        }
+                        targetSim.SimDescription.AddSpecialOutfit(new SimOutfit(targetSim.SimDescription.GetSpecialOutfit(sourceSpecialOutfitKey).Key), destinationSpecialOutfitKey);
                     }
                     foreach (Type interactionInstanceType in destinationInteractionInstanceTypes)
                     {
@@ -463,11 +452,7 @@ namespace Destrospean.OutfitAssignment
                     }
                     if (targetSim == null && OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(specialOutfitKey))
                     {
-                        SimOutfit outfit;
-                        if (Sims3.Gameplay.CAS.OutfitUtils.TryApplyUniformToOutfit(Actor.CurrentOutfit, OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey], Actor.SimDescription, specialOutfitKey, out outfit))
-                        {
-                            Actor.SimDescription.AddSpecialOutfit(outfit, specialOutfitKey);
-                        }
+                        Actor.AddGlobalAssignedOutfit(specialOutfitKey);
                     }
                     if ((targetSim ?? Actor).EditSpecialOutfit(specialOutfitKey))
                     {
@@ -478,10 +463,7 @@ namespace Destrospean.OutfitAssignment
                     }
                     if (targetSim == null)
                     {
-                        SimBuilder simBuilder = new SimBuilder();
-                        simBuilder.PrepareForOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));
-                        simBuilder.RemoveParts(BodyTypes.AgeWeathering, BodyTypes.BodyHairCalves, BodyTypes.BodyHairFeet, BodyTypes.BodyHairForearms, BodyTypes.BodyHairFullBack, BodyTypes.BodyHairLowerBack, BodyTypes.BodyHairStomach, BodyTypes.BodyHairUpperBack, BodyTypes.BodyHairUpperChest, BodyTypes.Face, BodyTypes.Freckles, BodyTypes.Moles, BodyTypes.Scalp, BodyTypes.Tattoo, BodyTypes.TattooTemplate);
-                        OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey] = new SimOutfit(simBuilder.CacheOutfit(specialOutfitKey));
+                        OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey] = new SimOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey).Key);
                         if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                         {
                             Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
