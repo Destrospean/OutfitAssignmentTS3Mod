@@ -1,4 +1,4 @@
-﻿namespace Sims3.Gameplay.Destrospean
+namespace Sims3.Gameplay.Destrospean
 {
     public static class OutfitAssignment
     {

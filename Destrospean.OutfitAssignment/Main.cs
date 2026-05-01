@@ -17,6 +17,11 @@ namespace Destrospean.OutfitAssignment
             {
                 Sim sim = (Sim)(object)this;
                 index = -1;
+                if (category == sim.CurrentOutfitCategory)
+                {
+                    index = sim.CurrentOutfitIndex;
+                    return;
+                }
                 if (sim.SimDescription.IsVisuallyPregnant && category == OutfitCategories.Outerwear && sim.SimDescription.GetOutfitCount(category) < 1)
                 {
                     sim.CreateRandomOuterwear();
