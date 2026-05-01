@@ -180,6 +180,10 @@ namespace Destrospean.OutfitAssignment
                         }
                     }
                     specialOutfitKey = string.IsNullOrEmpty(specialOutfitKey) ? (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID() : specialOutfitKey;
+                    if (targetSim == null)
+                    {
+                        ShowIncludeHairDialog(specialOutfitKey);
+                    }
                     bool outfitIsPreexisting = targetSim != null && targetSim.SimDescription.HasSpecialOutfit(specialOutfitKey);
                     if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                     {
@@ -317,12 +321,24 @@ namespace Destrospean.OutfitAssignment
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
                 if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, selectedInteractionInstanceTypes[0], out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, selectedInteractionInstanceTypes[0], out exitCallbackType))
                 {
+                    bool includeHair = targetSim == null && Sims3.UI.AcceptCancelDialog.Show(Common.Localize("/Dialogs/IncludeHairDialog:Title"));
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
                         OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                         if (targetSim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment))
                         {
                             targetSim.GetSimDescription().AssignOutfitToInteraction(outfitAssignment.SpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        }
+                        if (includeHair)
+                        {
+                            if (!OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.Contains(outfitAssignment.SpecialOutfitKey))
+                            {
+                                OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.Add(outfitAssignment.SpecialOutfitKey);
+                            }
+                        }
+                        else
+                        {
+                            OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.RemoveAll(x => x == outfitAssignment.SpecialOutfitKey);
                         }
                     }
                 }
@@ -388,6 +404,10 @@ namespace Destrospean.OutfitAssignment
                     if (targetSim == null)
                     {
                         OutfitAssignmentUtils.GlobalAssignedOutfits[destinationSpecialOutfitKey] = new SimOutfit(OutfitAssignmentUtils.GlobalAssignedOutfits[sourceSpecialOutfitKey].Key);
+                        if (targetSim == null)
+                        {
+                            ShowIncludeHairDialog(destinationSpecialOutfitKey);
+                        }
                     }
                     else
                     {
@@ -595,7 +615,11 @@ namespace Destrospean.OutfitAssignment
                                         sim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
                                     }
                                 }
-                                OutfitAssignmentUtils.GlobalAssignedOutfits.Remove(outfitAssignment.SpecialOutfitKey);
+                                if (OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
+                                {
+                                    OutfitAssignmentUtils.GlobalAssignedOutfits.Remove(outfitAssignment.SpecialOutfitKey);
+                                }
+                                OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.RemoveAll(x => x == outfitAssignment.SpecialOutfitKey);
                             }
                             else
                             {
@@ -607,6 +631,20 @@ namespace Destrospean.OutfitAssignment
                 }
                 return true;
             }
+        }
+
+        public static bool ShowIncludeHairDialog(string globalAssignedSpecialOutfitKey)
+        {
+            if (Sims3.UI.AcceptCancelDialog.Show(Common.Localize("/Dialogs/IncludeHairDialog:Title")))
+            {
+                if (!OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.Contains(globalAssignedSpecialOutfitKey))
+                {
+                    OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.Add(globalAssignedSpecialOutfitKey);
+                }
+                return true;
+            }
+            OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.RemoveAll(x => x == globalAssignedSpecialOutfitKey);
+            return false;
         }
 
         public static Sims3.Gameplay.CAS.SimDescription GetSimDescription(this Sim sim)

@@ -37,6 +37,9 @@ namespace Destrospean.OutfitAssignment
         [PersistableStatic(true)]
         public static Dictionary<string, SimOutfit> GlobalAssignedOutfits = new Dictionary<string, SimOutfit>();
 
+        [PersistableStatic(true)]
+        public static List<string> GlobalAssignedOutfitsIncludingHair = new List<string>();
+
         public const string OutfitAssignmentCategoryPrefix = "OutfitAssignment_Category_";
 
         [PersistableStatic(true)]
@@ -88,11 +91,12 @@ namespace Destrospean.OutfitAssignment
             {
                 return false;
             }
+            bool includeHair = GlobalAssignedOutfitsIncludingHair.Contains(globalAssignedSpecialOutfitKey);
             simSpecialOutfitKey = simSpecialOutfitKey ?? globalAssignedSpecialOutfitKey;
             if (sim.SimDescription.HasSpecialOutfit(simSpecialOutfitKey))
             {
                 SimOutfit simSpecialOutfit = sim.SimDescription.GetSpecialOutfit(simSpecialOutfitKey);
-                if (Array.TrueForAll(simSpecialOutfit.Parts, x => !Array.Exists(ClothingTypes, y => y == x.BodyType) || Array.Exists(globalAssignedOutfit.Parts, y => x.Equals(y) && globalAssignedOutfit.GetPartPreset(y.Key) == simSpecialOutfit.GetPartPreset(x.Key))))
+                if (Array.TrueForAll(simSpecialOutfit.Parts, x => !Array.Exists(ClothingTypes, y => y == x.BodyType) || x.BodyType == BodyTypes.Hair && !includeHair || Array.Exists(globalAssignedOutfit.Parts, y => x.Equals(y) && globalAssignedOutfit.GetPartPreset(y.Key) == simSpecialOutfit.GetPartPreset(x.Key))))
                 {
                     return true;
                 }
@@ -112,6 +116,12 @@ namespace Destrospean.OutfitAssignment
                         {
                             case BodyTypes.FullBody:
                                 simBuilder.RemoveParts(BodyTypes.LowerBody, BodyTypes.UpperBody);
+                                break;
+                            case BodyTypes.Hair:
+                                if (!includeHair)
+                                {
+                                    continue;
+                                }
                                 break;
                             case BodyTypes.LowerBody:
                             case BodyTypes.UpperBody:

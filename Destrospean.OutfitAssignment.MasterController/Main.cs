@@ -58,6 +58,10 @@ namespace Destrospean.OutfitAssignment.MasterController
                         }
                     }
                     specialOutfitKey = string.IsNullOrEmpty(specialOutfitKey) ? (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID() : specialOutfitKey;
+                    if (targetSim == null)
+                    {
+                        Interactions.ShowIncludeHairDialog(specialOutfitKey);
+                    }
                     bool outfitIsPreexisting = targetSim != null && targetSim.SimDescription.HasSpecialOutfit(specialOutfitKey);
                     if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                     {
