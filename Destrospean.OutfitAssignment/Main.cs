@@ -17,6 +17,11 @@ namespace Destrospean.OutfitAssignment
             {
                 Sim sim = (Sim)(object)this;
                 index = -1;
+                if (category == sim.CurrentOutfitCategory)
+                {
+                    index = sim.CurrentOutfitIndex;
+                    return;
+                }
                 if (sim.SimDescription.IsVisuallyPregnant && category == OutfitCategories.Outerwear && sim.SimDescription.GetOutfitCount(category) < 1)
                 {
                     sim.CreateRandomOuterwear();
@@ -136,6 +141,7 @@ namespace Destrospean.OutfitAssignment
         static Main()
         {
             InteractionInstanceTypeUtils.InitInteractionInstanceTypes();
+            InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("GetCategoryAndIndexToUse", System.Array.ConvertAll(typeof(SimPatch).GetMethod("GetCategoryAndIndexToUse").GetParameters(), x => x.ParameterType)), typeof(SimPatch).GetMethod("GetCategoryAndIndexToUse"));
             InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("SwitchToOutfitWithSpin", System.Array.ConvertAll(typeof(SimPatch).GetMethod("SwitchToOutfitWithSpin").GetParameters(), x => x.ParameterType)), typeof(SimPatch).GetMethod("SwitchToOutfitWithSpin"));
             EventListener simAgeTransitionListener = null,
             simDescriptionDisposedListener = null,
