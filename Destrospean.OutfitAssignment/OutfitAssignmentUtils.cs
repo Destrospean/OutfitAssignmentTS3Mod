@@ -80,19 +80,35 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public static void AddGlobalAssignedOutfit(this Sim sim, string sourceSpecialOutfitKey, string destinationSpecialOutfitKey = null)
+        public static bool AddGlobalAssignedOutfit(this Sim sim, string globalAssignedSpecialOutfitKey, string simSpecialOutfitKey = null)
         {
+            SimOutfit baseOutfit = sim.SimDescription.GetOutfit(OutfitCategories.Everyday, 0),
+            globalAssignedOutfit;
+            if (!GlobalAssignedOutfits.TryGetValue(globalAssignedSpecialOutfitKey, out globalAssignedOutfit))
+            {
+                return false;
+            }
+            simSpecialOutfitKey = simSpecialOutfitKey ?? globalAssignedSpecialOutfitKey;
+            if (sim.SimDescription.HasSpecialOutfit(simSpecialOutfitKey))
+            {
+                SimOutfit simSpecialOutfit = sim.SimDescription.GetSpecialOutfit(simSpecialOutfitKey);
+                if (Array.TrueForAll(simSpecialOutfit.Parts, x => !Array.Exists(ClothingTypes, y => y == x.BodyType) || Array.Exists(globalAssignedOutfit.Parts, y => x.Equals(y) && globalAssignedOutfit.GetPartPreset(y.Key) == simSpecialOutfit.GetPartPreset(x.Key))))
+                {
+                    return true;
+                }
+                sim.SimDescription.RemoveSpecialOutfit(simSpecialOutfitKey);
+            }
             using (SimBuilder simBuilder = new SimBuilder
                 {
                     UseCompression = true
                 })
             {
-                simBuilder.PrepareForOutfit(sim.CurrentOutfit);
-                foreach (CASPart part in GlobalAssignedOutfits[sourceSpecialOutfitKey].Parts)
+                simBuilder.PrepareForOutfit(baseOutfit);
+                foreach (CASPart casPart in globalAssignedOutfit.Parts)
                 {
-                    if (Array.Exists(ClothingTypes, x => x == part.BodyType))
+                    if (Array.Exists(ClothingTypes, x => x == casPart.BodyType))
                     {
-                        switch (part.BodyType)
+                        switch (casPart.BodyType)
                         {
                             case BodyTypes.FullBody:
                                 simBuilder.RemoveParts(BodyTypes.LowerBody, BodyTypes.UpperBody);
@@ -102,17 +118,19 @@ namespace Destrospean.OutfitAssignment
                                 simBuilder.RemoveParts(BodyTypes.FullBody);
                                 break;
                         }
-                        simBuilder.RemoveParts(part.BodyType);
-                        simBuilder.AddPart(part);
-                        simBuilder.SetPartPresetString(part.Key, GlobalAssignedOutfits[sourceSpecialOutfitKey].GetPartPreset(part.Key));
+                        simBuilder.RemoveParts(casPart.BodyType);
+                        simBuilder.AddPart(casPart);
+                        string preset = globalAssignedOutfit.GetPartPreset(casPart.Key);
+                        if (!string.IsNullOrEmpty(preset))
+                        {
+                            if (CASUtils.ApplyPresetToPart(simBuilder, casPart, preset))
+                            {
+                                simBuilder.SetPartPreset(casPart.Key, null, preset);
+                            }
+                        }
                     }
                 }
-                destinationSpecialOutfitKey = destinationSpecialOutfitKey ?? sourceSpecialOutfitKey;
-                if (sim.SimDescription.HasSpecialOutfit(destinationSpecialOutfitKey))
-                {
-                    sim.SimDescription.RemoveSpecialOutfit(destinationSpecialOutfitKey);
-                }
-                sim.SimDescription.AddSpecialOutfit(new SimOutfit(simBuilder.CacheOutfit(destinationSpecialOutfitKey + "_" + sim.SimDescription.SimDescriptionId)), destinationSpecialOutfitKey);
+                return sim.SimDescription.AddSpecialOutfit(new SimOutfit(simBuilder.CacheOutfit(simSpecialOutfitKey + "_" + sim.SimDescription.SimDescriptionId)), simSpecialOutfitKey) > -1;
             }
         }
 
@@ -179,6 +197,10 @@ namespace Destrospean.OutfitAssignment
             if (outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentCategoryPrefix))
             {
                 outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentCategoryPrefix.Length));
+                if (outfitCategory == 0)
+                {
+                    return;
+                }
                 outfitIndex = Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(outfitCategory) - 1) : 0;
             }
             else

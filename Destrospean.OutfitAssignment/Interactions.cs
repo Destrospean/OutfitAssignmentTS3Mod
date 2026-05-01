@@ -46,7 +46,7 @@ namespace Destrospean.OutfitAssignment
                 Type[] selectedInteractionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
                 OutfitCategories outfitCategory;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim ?? Actor, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim ?? Actor, out exitCallbackType) && TryGetOutfitCategory(targetSim ?? Actor, out outfitCategory))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, out exitCallbackType) && TryGetOutfitCategory(targetSim, out outfitCategory))
                 {
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
@@ -56,53 +56,57 @@ namespace Destrospean.OutfitAssignment
                 return true;
             }
 
-            public static bool TryGetOutfitCategory(Sim target, out OutfitCategories outfitCategory)
+            public static bool TryGetOutfitCategory(Sim sim, out OutfitCategories outfitCategory)
             {
                 string localizationKey = "/Dialogs/OutfitCategoryDialog",
-                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(target.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new AssignOutfitToInteraction.DummyComparer())
+                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(sim != null && sim.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new AssignOutfitToInteraction.DummyComparer())
                     {
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Everyday"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:None"),
+                            OutfitCategories.None.ToString()
+                        },
+                        {
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Everyday"),
                             OutfitCategories.Everyday.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Formalwear"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Formalwear"),
                             OutfitCategories.Formalwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Sleepwear"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Sleepwear"),
                             OutfitCategories.Sleepwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Swimwear"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Swimwear"),
                             OutfitCategories.Swimwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Athletic"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Athletic"),
                             OutfitCategories.Athletic.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Career"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Career"),
                             OutfitCategories.Career.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Outerwear"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Outerwear"),
                             OutfitCategories.Outerwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:MartialArts"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:MartialArts"),
                             OutfitCategories.MartialArts.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Naked"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Naked"),
                             OutfitCategories.Naked.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Singed"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Singed"),
                             OutfitCategories.Singed.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:SkinnyDippingTowel"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SkinnyDippingTowel"),
                             OutfitCategories.SkinnyDippingTowel.ToString()
                         }
                     }, OutfitCategories.Everyday.ToString()) as string;
@@ -158,7 +162,7 @@ namespace Destrospean.OutfitAssignment
                 Sim targetSim = Target as Sim;
                 Type[] selectedInteractionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => !OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))) && TryGetEntryCallbackType(targetSim ?? Actor, out entryCallbackType) && TryGetExitCallbackType(targetSim ?? Actor, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => !OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))) && TryGetEntryCallbackType(targetSim, out entryCallbackType) && TryGetExitCallbackType(targetSim, out exitCallbackType))
                 {
                     string specialOutfitKey = "";
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
@@ -207,29 +211,29 @@ namespace Destrospean.OutfitAssignment
                 return true;
             }
 
-            public static bool TryGetEntryCallbackType(Sim target, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
+            public static bool TryGetEntryCallbackType(Sim sim, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
             {
                 string localizationKey = "/Dialogs/EntryCallbackTypeDialog",
-                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(target.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
+                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(sim != null && sim.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionStarted"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:InteractionStarted"),
                             InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:StandardEntry"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:StandardEntry"),
                             InteractionInstanceTypeUtils.CallbackTypes.StandardEntry.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:SyncLevelRouted"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SyncLevelRouted"),
                             InteractionInstanceTypeUtils.CallbackTypes.SyncLevelRouted.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:SyncLevelCommitted"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SyncLevelCommitted"),
                             InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCommitted.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:OutfitChanged"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:OutfitChanged"),
                             InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged.ToString()
                         }
                     }, InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()) as string;
@@ -242,25 +246,25 @@ namespace Destrospean.OutfitAssignment
                 return true;
             }
 
-            public static bool TryGetExitCallbackType(Sim target, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
+            public static bool TryGetExitCallbackType(Sim sim, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
             {
                 string localizationKey = "/Dialogs/ExitCallbackTypeDialog",
-                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(target.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
+                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(sim != null && sim.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionEnded"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:InteractionEnded"),
                             InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:StandardExit"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:StandardExit"),
                             InteractionInstanceTypeUtils.CallbackTypes.StandardExit.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:SyncLevelCompleted"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SyncLevelCompleted"),
                             InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCompleted.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Never"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Never"),
                             InteractionInstanceTypeUtils.CallbackTypes.Never.ToString()
                         }
                     }, InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()) as string;
@@ -308,7 +312,7 @@ namespace Destrospean.OutfitAssignment
                 Sim targetSim = Target as Sim;
                 Type[] selectedInteractionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim ?? Actor, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim ?? Actor, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, out exitCallbackType))
                 {
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
@@ -355,7 +359,7 @@ namespace Destrospean.OutfitAssignment
             public override bool Run()
             {
                 Sim targetSim = Target as Sim;
-                Type[] sourceInteractionInstanceTypes, destinationInteractionInstanceTypes;
+                Type[] destinationInteractionInstanceTypes, sourceInteractionInstanceTypes;
                 string sourceSpecialOutfitKey = "";
                 if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.ConvertAll(Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => (targetSim != null || x.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType)), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
                 {
@@ -375,7 +379,7 @@ namespace Destrospean.OutfitAssignment
                     }
                 }
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim ?? Actor, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim ?? Actor, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, out exitCallbackType))
                 {
                     string destinationSpecialOutfitKey = (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID();
                     if (targetSim == null)
@@ -507,7 +511,7 @@ namespace Destrospean.OutfitAssignment
             public override bool Run()
             {
                 Sim targetSim = Target as Sim;
-                Type[] sourceInteractionInstanceTypes, destinationInteractionInstanceTypes;
+                Type[] destinationInteractionInstanceTypes, sourceInteractionInstanceTypes;
                 if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName)), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
                 {
                     return true;
@@ -527,7 +531,7 @@ namespace Destrospean.OutfitAssignment
                     }
                 }
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim ?? Actor, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim ?? Actor, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, out exitCallbackType))
                 {
                     foreach (Type interactionInstanceType in destinationInteractionInstanceTypes)
                     {

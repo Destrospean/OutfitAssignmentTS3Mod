@@ -98,51 +98,55 @@ namespace Destrospean.OutfitAssignment
                             sim.AddGlobalAssignedOutfit(outfitAssignment.SpecialOutfitKey);
                         }
                         OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special;
+                        if (outfitCategory == 0)
+                        {
+                            return false;
+                        }
                         sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
                         spin = new Sim.SwitchOutfitHelper(sim, outfitCategory, outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(outfitCategory) - 1) : 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
                     }
                 }
                 spin.Start();
                 spin.Wait(true);
-                if (spin.WillChange)
+                if (!spin.WillChange)
                 {
-                    if (sim.SimDescription.ChildOrAbove)
+                    return false;
+                }
+                if (sim.SimDescription.ChildOrAbove)
+                {
+                    if (mirrored && !sim.SimDescription.IsHorse)
                     {
-                        if (mirrored && !sim.SimDescription.IsHorse)
-                        {
-                            mirrored = false;
-                        }
-                        if (sim.Posture is Sims3.Gameplay.Objects.Hoverboard.RidingHoverboardPosture)
-                        {
-                            spin.AddScriptEventHandler(sim.Posture.CurrentStateMachine);
-                            sim.Posture.CurrentStateMachine.RequestState("x", "ChangeClothes");
-                            sim.Posture.CurrentStateMachine.RequestState("x", "Hold");
-                        }
-                        else
-                        {
-                            StateMachineClient stateMachineClient = StateMachineClient.Acquire(sim, "solo_generic");
-                            if (string.IsNullOrEmpty(spin.OverrideAnimation))
-                            {
-                                stateMachineClient.SetParameter("AnimationName", "a_clothesChange" + (mirrored ? "_mirrored" : "") + (sim.IsHuman ? "" : "_x"), sim.IsHuman ? ProductVersion.BaseGame : ProductVersion.EP5);
-                            }
-                            else
-                            {
-                                stateMachineClient.SetParameter("AnimationName", spin.OverrideAnimation, spin.OverrideProductVersion);
-                            }
-                            spin.AddScriptEventHandler(stateMachineClient);
-                            stateMachineClient.SetActor("x", sim);
-                            stateMachineClient.EnterState("x", "Enter");
-                            stateMachineClient.RequestState("x", "Play Animation");
-                            stateMachineClient.RequestState("x", "Exit");
-                        }
+                        mirrored = false;
+                    }
+                    if (sim.Posture is Sims3.Gameplay.Objects.Hoverboard.RidingHoverboardPosture)
+                    {
+                        spin.AddScriptEventHandler(sim.Posture.CurrentStateMachine);
+                        sim.Posture.CurrentStateMachine.RequestState("x", "ChangeClothes");
+                        sim.Posture.CurrentStateMachine.RequestState("x", "Hold");
                     }
                     else
                     {
-                        spin.ChangeOutfit();
+                        StateMachineClient stateMachineClient = StateMachineClient.Acquire(sim, "solo_generic");
+                        if (string.IsNullOrEmpty(spin.OverrideAnimation))
+                        {
+                            stateMachineClient.SetParameter("AnimationName", "a_clothesChange" + (mirrored ? "_mirrored" : "") + (sim.IsHuman ? "" : "_x"), sim.IsHuman ? ProductVersion.BaseGame : ProductVersion.EP5);
+                        }
+                        else
+                        {
+                            stateMachineClient.SetParameter("AnimationName", spin.OverrideAnimation, spin.OverrideProductVersion);
+                        }
+                        spin.AddScriptEventHandler(stateMachineClient);
+                        stateMachineClient.SetActor("x", sim);
+                        stateMachineClient.EnterState("x", "Enter");
+                        stateMachineClient.RequestState("x", "Play Animation");
+                        stateMachineClient.RequestState("x", "Exit");
                     }
-                    return true;
                 }
-                return false;
+                else
+                {
+                    spin.ChangeOutfit();
+                }
+                return true;
             }
         }
 
