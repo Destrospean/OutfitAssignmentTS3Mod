@@ -93,14 +93,9 @@ namespace Destrospean.OutfitAssignment
                     bool isGlobal = false;
                     if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) || (isGlobal = OutfitAssignmentUtils.TryGetOutfitAssignment(null, sim.CurrentInteraction, out outfitAssignment)))
                     {
-                        SimOutfit outfit;
-                        if (isGlobal && Sims3.Gameplay.CAS.OutfitUtils.TryApplyUniformToOutfit(sim.CurrentOutfit, OutfitAssignmentUtils.GlobalAssignedOutfits[outfitAssignment.SpecialOutfitKey], sim.SimDescription, outfitAssignment.SpecialOutfitKey, out outfit))
+                        if (isGlobal)
                         {
-                            if (sim.SimDescription.HasSpecialOutfit(outfitAssignment.SpecialOutfitKey))
-                            {
-                                sim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
-                            }
-                            sim.SimDescription.AddSpecialOutfit(outfit, outfitAssignment.SpecialOutfitKey);
+                            sim.AddGlobalAssignedOutfit(outfitAssignment.SpecialOutfitKey);
                         }
                         OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special;
                         sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);

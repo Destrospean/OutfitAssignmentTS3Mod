@@ -183,14 +183,9 @@ namespace Destrospean.OutfitAssignment
             }
             else
             {
-                SimOutfit outfit;
-                if (outfitAssignment.SimDescription == null && OutfitUtils.TryApplyUniformToOutfit(sim.CurrentOutfit, GlobalAssignedOutfits[outfitAssignment.SpecialOutfitKey], sim.SimDescription, outfitAssignment.SpecialOutfitKey, out outfit))
+                if (outfitAssignment.SimDescription == null)
                 {
-                    if (sim.SimDescription.HasSpecialOutfit(outfitAssignment.SpecialOutfitKey))
-                    {
-                        sim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
-                    }
-                    sim.SimDescription.AddSpecialOutfit(outfit, outfitAssignment.SpecialOutfitKey);
+                    sim.AddGlobalAssignedOutfit(outfitAssignment.SpecialOutfitKey);
                 }
                 outfitCategory = OutfitCategories.Special;
                 outfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
