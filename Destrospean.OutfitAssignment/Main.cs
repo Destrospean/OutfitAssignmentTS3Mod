@@ -235,14 +235,14 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)))
                     {
-                        if (interactionInstance.InstanceActor.CurrentOutfitCategory != OutfitCategories.Special || interactionInstance.InstanceActor.CurrentOutfitIndex != outfitAssignment.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)))
+                        if (interactionInstance.InstanceActor.CurrentOutfitCategory != OutfitCategories.Special || interactionInstance.InstanceActor.CurrentOutfitIndex != interactionInstance.InstanceActor.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)))
                         {
-                            OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == outfitAssignment.SimDescription);
+                            OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == interactionInstance.InstanceActor.SimDescription);
                             OutfitAssignmentUtils.PreviousOutfits.Add(new OutfitAssignmentUtils.Outfit
                                 {
                                     Category = interactionInstance.InstanceActor.CurrentOutfitCategory,
                                     Index = interactionInstance.InstanceActor.CurrentOutfitIndex,
-                                    SimDescription = outfitAssignment.SimDescription
+                                    SimDescription = interactionInstance.InstanceActor.SimDescription
                                 });
                         }
                         if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted)
