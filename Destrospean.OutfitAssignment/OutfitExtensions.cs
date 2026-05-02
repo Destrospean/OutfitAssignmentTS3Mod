@@ -16,7 +16,10 @@ namespace Destrospean.OutfitAssignment
 
         public static void ApplyToAllOutfits(this SimDescription simDescription, OutfitFunc outfitFunc, bool spin = false)
         {
-            using (SimBuilder simBuilder = new SimBuilder())
+            using (SimBuilder simBuilder = new SimBuilder
+                {
+                    UseCompression = true
+                })
             {
                 ApplyToAllOutfits(simDescription, simBuilder, outfitFunc, spin);
             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sims3.Gameplay.Abstracts;
 using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.Autonomy;
 using Sims3.Gameplay.Interactions;
@@ -8,19 +9,20 @@ using Sims3.SimIFace.CAS;
 
 namespace Destrospean.OutfitAssignment
 {
-    public class Interactions
+    public static class Interactions
     {
-        public class AssignOutfitCategoryToInteraction : ImmediateInteraction<Sim, Sim>
+        public class AssignOutfitCategoryToInteraction : ImmediateInteraction<Sim, GameObject>
         {
             public static InteractionDefinition Singleton = new Definition();
 
             public const string sLocalizationKey = "/Interactions/AssignOutfitCategoryToInteraction";
 
-            public class Definition : ImmediateInteractionDefinition<Sim, Sim, AssignOutfitCategoryToInteraction>
+            public class Definition : ImmediateInteractionDefinition<Sim, GameObject, AssignOutfitCategoryToInteraction>
             {
-                public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
+                public override string GetInteractionName(Sim actor, GameObject target, InteractionObjectPair iop)
                 {
-                    return Common.Localize(target.IsFemale, sLocalizationKey + ":Name");
+                    Sim targetSim = target as Sim;
+                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
@@ -31,77 +33,84 @@ namespace Destrospean.OutfitAssignment
                     };
                 }
 
-                public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
+                public override bool Test(Sim actor, GameObject target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return target.IsHuman;
+                    Sim targetSim = target as Sim;
+                    return targetSim == null || targetSim.IsHuman;
                 }
             }
 
             public override bool Run()
             {
+                Sim targetSim = Target as Sim;
                 Type[] selectedInteractionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
                 OutfitCategories outfitCategory;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes) && AssignOutfitToInteraction.TryGetEntryCallbackType(Target, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(Target, out exitCallbackType) && TryGetOutfitCategory(Target, out outfitCategory))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, selectedInteractionInstanceTypes[0], out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, selectedInteractionInstanceTypes[0], out exitCallbackType) && TryGetOutfitCategory(targetSim, selectedInteractionInstanceTypes[0], out outfitCategory))
                 {
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
-                        Target.SimDescription.AssignOutfitToInteraction(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix + outfitCategory, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        targetSim.GetSimDescription().AssignOutfitToInteraction(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix + outfitCategory, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                     }
                 }
                 return true;
             }
 
-            public static bool TryGetOutfitCategory(Sim target, out OutfitCategories outfitCategory)
+            public static bool TryGetOutfitCategory(Sim sim, Type interactionInstanceType, out OutfitCategories outfitCategory)
             {
+                OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                 string localizationKey = "/Dialogs/OutfitCategoryDialog",
-                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(target.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new AssignOutfitToInteraction.DummyComparer())
+                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(sim != null && sim.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new AssignOutfitToInteraction.DummyComparer())
                     {
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Everyday"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:None"),
+                            OutfitCategories.None.ToString()
+                        },
+                        {
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Everyday"),
                             OutfitCategories.Everyday.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Formalwear"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Formalwear"),
                             OutfitCategories.Formalwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Sleepwear"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Sleepwear"),
                             OutfitCategories.Sleepwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Swimwear"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Swimwear"),
                             OutfitCategories.Swimwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Athletic"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Athletic"),
                             OutfitCategories.Athletic.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Career"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Career"),
                             OutfitCategories.Career.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Outerwear"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Outerwear"),
                             OutfitCategories.Outerwear.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:MartialArts"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:MartialArts"),
                             OutfitCategories.MartialArts.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Naked"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Naked"),
                             OutfitCategories.Naked.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Singed"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Singed"),
                             OutfitCategories.Singed.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:SkinnyDippingTowel"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SkinnyDippingTowel"),
                             OutfitCategories.SkinnyDippingTowel.ToString()
                         }
-                    }, OutfitCategories.Everyday.ToString()) as string;
+                    }, sim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length) : OutfitCategories.Everyday.ToString()) as string;
                 if (text == null)
                 {
                     outfitCategory = OutfitCategories.None;
@@ -112,17 +121,18 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public class AssignOutfitToInteraction : ImmediateInteraction<Sim, Sim>
+        public class AssignOutfitToInteraction : ImmediateInteraction<Sim, GameObject>
         {
             public static InteractionDefinition Singleton = new Definition();
 
             public const string sLocalizationKey = "/Interactions/AssignOutfitToInteraction";
 
-            public class Definition : ImmediateInteractionDefinition<Sim, Sim, AssignOutfitToInteraction>
+            public class Definition : ImmediateInteractionDefinition<Sim, GameObject, AssignOutfitToInteraction>
             {
-                public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
+                public override string GetInteractionName(Sim actor, GameObject target, InteractionObjectPair iop)
                 {
-                    return Common.Localize(target.IsFemale, sLocalizationKey + ":Name");
+                    Sim targetSim = target as Sim;
+                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
@@ -133,9 +143,10 @@ namespace Destrospean.OutfitAssignment
                     };
                 }
 
-                public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
+                public override bool Test(Sim actor, GameObject target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return target.IsHuman;
+                    Sim targetSim = target as Sim;
+                    return targetSim == null || targetSim.IsHuman;
                 }
             }
 
@@ -149,67 +160,89 @@ namespace Destrospean.OutfitAssignment
 
             public override bool Run()
             {
+                Sim targetSim = Target as Sim;
                 Type[] selectedInteractionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => !OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == Target.SimDescription && y.InteractionInstanceType == x.FullName))) && TryGetEntryCallbackType(Target, out entryCallbackType) && TryGetExitCallbackType(Target, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => !OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))) && TryGetEntryCallbackType(targetSim, selectedInteractionInstanceTypes[0], out entryCallbackType) && TryGetExitCallbackType(targetSim, selectedInteractionInstanceTypes[0], out exitCallbackType))
                 {
                     string specialOutfitKey = "";
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
                         OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                        if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
+                        if (targetSim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
                         {
                             if (!string.IsNullOrEmpty(specialOutfitKey))
                             {
-                                Common.Notify(Common.Localize(Target.IsFemale, sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", Target), Target.SimDescription, Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
+                                Common.Notify(Common.Localize(targetSim == null || targetSim.IsFemale, sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetSim ?? Actor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
                                 return true;
                             }
                             specialOutfitKey = outfitAssignment.SpecialOutfitKey;
                         }
                     }
-                    specialOutfitKey = string.IsNullOrEmpty(specialOutfitKey) ? "OutfitAssignment_" + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID() : specialOutfitKey;
-                    bool outfitIsPreexisting = Target.SimDescription.HasSpecialOutfit(specialOutfitKey);
-                    if (Target.EditSpecialOutfit(specialOutfitKey))
+                    specialOutfitKey = string.IsNullOrEmpty(specialOutfitKey) ? (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID() : specialOutfitKey;
+                    if (targetSim == null)
+                    {
+                        ShowIncludeHairDialog(specialOutfitKey);
+                    }
+                    bool outfitIsPreexisting = targetSim != null && targetSim.SimDescription.HasSpecialOutfit(specialOutfitKey);
+                    if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                    {
+                        Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                    }
+                    if (targetSim == null && OutfitAssignmentUtils.GlobalOutfits.ContainsKey(specialOutfitKey))
+                    {
+                        Actor.AddGlobalAssignedOutfit(specialOutfitKey);
+                    }
+                    if ((targetSim ?? Actor).EditSpecialOutfit(specialOutfitKey))
                     {
                         foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                         {
-                            Target.SimDescription.AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                            targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                         }
                     }
                     else if (!outfitIsPreexisting)
                     {
-                        Target.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                        (targetSim ?? Actor).SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                    }
+                    if (targetSim == null)
+                    {
+                        OutfitAssignmentUtils.GlobalOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));;
+                        if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                        {
+                            Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                        }
                     }
                 }
                 return true;
             }
 
-            public static bool TryGetEntryCallbackType(Sim target, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
+            public static bool TryGetEntryCallbackType(Sim sim, Type interactionInstanceType, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
             {
+                OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                 string localizationKey = "/Dialogs/EntryCallbackTypeDialog",
-                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(target.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
+                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(sim != null && sim.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionStarted"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:InteractionStarted"),
                             InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:StandardEntry"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:StandardEntry"),
                             InteractionInstanceTypeUtils.CallbackTypes.StandardEntry.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:SyncLevelRouted"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SyncLevelRouted"),
                             InteractionInstanceTypeUtils.CallbackTypes.SyncLevelRouted.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:SyncLevelCommitted"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SyncLevelCommitted"),
                             InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCommitted.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:OutfitChanged"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:OutfitChanged"),
                             InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged.ToString()
                         }
-                    }, InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()) as string;
+                    }, sim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) ? outfitAssignment.EntryCallbackType.ToString() : InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted.ToString()) as string;
                 if (text == null)
                 {
                     callbackType = null;
@@ -219,28 +252,29 @@ namespace Destrospean.OutfitAssignment
                 return true;
             }
 
-            public static bool TryGetExitCallbackType(Sim target, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
+            public static bool TryGetExitCallbackType(Sim sim, Type interactionInstanceType, out InteractionInstanceTypeUtils.CallbackTypes? callbackType)
             {
+                OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                 string localizationKey = "/Dialogs/ExitCallbackTypeDialog",
-                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(target.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
+                text = Dialogs.ComboSelectionDialog.Show(Common.Localize(sim != null && sim.IsFemale, localizationKey + ":Title"), new SortedDictionary<string, object>(new DummyComparer())
                     {
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:InteractionEnded"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:InteractionEnded"),
                             InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:StandardExit"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:StandardExit"),
                             InteractionInstanceTypeUtils.CallbackTypes.StandardExit.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:SyncLevelCompleted"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:SyncLevelCompleted"),
                             InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCompleted.ToString()
                         },
                         {
-                            Common.Localize(target.IsFemale, localizationKey + "/Options:Never"),
+                            Common.Localize(sim != null && sim.IsFemale, localizationKey + "/Options:Never"),
                             InteractionInstanceTypeUtils.CallbackTypes.Never.ToString()
                         }
-                    }, InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()) as string;
+                    }, sim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) ? outfitAssignment.ExitCallbackType.ToString() : InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded.ToString()) as string;
                 if (text == null)
                 {
                     callbackType = null;
@@ -251,17 +285,18 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public class ConfigureOutfitAssignment : ImmediateInteraction<Sim, Sim>
+        public class ConfigureOutfitAssignment : ImmediateInteraction<Sim, GameObject>
         {
             public static InteractionDefinition Singleton = new Definition();
 
             public const string sLocalizationKey = "/Interactions/ConfigureOutfitAssignment";
 
-            public class Definition : ImmediateInteractionDefinition<Sim, Sim, ConfigureOutfitAssignment>
+            public class Definition : ImmediateInteractionDefinition<Sim, GameObject, ConfigureOutfitAssignment>
             {
-                public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
+                public override string GetInteractionName(Sim actor, GameObject target, InteractionObjectPair iop)
                 {
-                    return Common.Localize(target.IsFemale, sLocalizationKey + ":Name");
+                    Sim targetSim = target as Sim;
+                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
@@ -272,24 +307,38 @@ namespace Destrospean.OutfitAssignment
                     };
                 }
 
-                public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
+                public override bool Test(Sim actor, GameObject target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return target.SimDescription.GetAllOutfitAssignments().Length > 0;
+                    Sim targetSim = target as Sim;
+                    return Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => targetSim != null || x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) || x.SpecialOutfitKey.StartsWith(actor.GetGlobalAssignedOutfitPrefix())).Length > 0;
                 }
             }
 
             public override bool Run()
             {
+                Sim targetSim = Target as Sim;
                 Type[] selectedInteractionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == Target.SimDescription && y.InteractionInstanceType == x.FullName))) && AssignOutfitToInteraction.TryGetEntryCallbackType(Target, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(Target, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, selectedInteractionInstanceTypes[0], out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, selectedInteractionInstanceTypes[0], out exitCallbackType))
                 {
+                    bool includeHair = targetSim == null && Sims3.UI.AcceptCancelDialog.Show(Common.Localize("/Dialogs/IncludeHairDialog:Title"));
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
                         OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                        if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment))
+                        if (targetSim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment))
                         {
-                            Target.SimDescription.AssignOutfitToInteraction(outfitAssignment.SpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                            targetSim.GetSimDescription().AssignOutfitToInteraction(outfitAssignment.SpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        }
+                        if (includeHair)
+                        {
+                            if (!OutfitAssignmentUtils.GlobalOutfitsIncludingHair.Contains(outfitAssignment.SpecialOutfitKey))
+                            {
+                                OutfitAssignmentUtils.GlobalOutfitsIncludingHair.Add(outfitAssignment.SpecialOutfitKey);
+                            }
+                        }
+                        else
+                        {
+                            OutfitAssignmentUtils.GlobalOutfitsIncludingHair.RemoveAll(x => x == outfitAssignment.SpecialOutfitKey);
                         }
                     }
                 }
@@ -297,17 +346,18 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public class CopyAssignedOutfitToInteraction : ImmediateInteraction<Sim, Sim>
+        public class CopyAssignedOutfitToInteraction : ImmediateInteraction<Sim, GameObject>
         {
             public static InteractionDefinition Singleton = new Definition();
 
             public const string sLocalizationKey = "/Interactions/CopyAssignedOutfitToInteraction";
 
-            public class Definition : ImmediateInteractionDefinition<Sim, Sim, CopyAssignedOutfitToInteraction>
+            public class Definition : ImmediateInteractionDefinition<Sim, GameObject, CopyAssignedOutfitToInteraction>
             {
-                public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
+                public override string GetInteractionName(Sim actor, GameObject target, InteractionObjectPair iop)
                 {
-                    return Common.Localize(target.IsFemale, sLocalizationKey + ":Name");
+                    Sim targetSim = target as Sim;
+                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
@@ -318,58 +368,72 @@ namespace Destrospean.OutfitAssignment
                     };
                 }
 
-                public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
+                public override bool Test(Sim actor, GameObject target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return Array.FindAll(target.SimDescription.GetAllOutfitAssignments(), x => !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)).Length > 0;
+                    Sim targetSim = target as Sim;
+                    return Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)).Length > 0;
                 }
             }
 
             public override bool Run()
             {
-                Type[] sourceInteractionInstanceTypes, destinationInteractionInstanceTypes;
-                if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.ConvertAll(Array.FindAll(Target.SimDescription.GetAllOutfitAssignments(), x => !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType)), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
+                Sim targetSim = Target as Sim;
+                Type[] destinationInteractionInstanceTypes, sourceInteractionInstanceTypes;
+                string sourceSpecialOutfitKey = "";
+                if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.ConvertAll(Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => (targetSim != null || x.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType)), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
                 {
                     return true;
                 }
-                string sourceSpecialOutfitKey = "";
                 foreach (Type interactionInstanceType in sourceInteractionInstanceTypes)
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && sourceSpecialOutfitKey != outfitAssignment.SpecialOutfitKey)
+                    if (targetSim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && sourceSpecialOutfitKey != outfitAssignment.SpecialOutfitKey)
                     {
                         if (!string.IsNullOrEmpty(sourceSpecialOutfitKey))
                         {
-                            Common.Notify(Common.Localize(Target.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", Target), Target.SimDescription, Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
+                            Common.Notify(Common.Localize(targetSim != null && targetSim.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetSim ?? Actor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
                             return true;
                         }
                         sourceSpecialOutfitKey = outfitAssignment.SpecialOutfitKey;
                     }
                 }
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(Target, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(Target, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, sourceInteractionInstanceTypes[0], out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, sourceInteractionInstanceTypes[0], out exitCallbackType))
                 {
-                    string destinationSpecialOutfitKey = "OutfitAssignment_" + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID();
-                    Target.SimDescription.AddSpecialOutfit(new SimOutfit(Target.SimDescription.GetSpecialOutfit(sourceSpecialOutfitKey).Key), destinationSpecialOutfitKey);
+                    string destinationSpecialOutfitKey = (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID();
+                    if (targetSim == null)
+                    {
+                        OutfitAssignmentUtils.GlobalOutfits[destinationSpecialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(OutfitAssignmentUtils.GlobalOutfits[sourceSpecialOutfitKey]);
+                        if (targetSim == null)
+                        {
+                            ShowIncludeHairDialog(destinationSpecialOutfitKey);
+                        }
+                    }
+                    else
+                    {
+                        targetSim.SimDescription.AddSpecialOutfit(new SimOutfit(targetSim.SimDescription.GetSpecialOutfit(sourceSpecialOutfitKey).Key), destinationSpecialOutfitKey);
+                    }
                     foreach (Type interactionInstanceType in destinationInteractionInstanceTypes)
                     {
-                        Target.SimDescription.AssignOutfitToInteraction(destinationSpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        targetSim.GetSimDescription().AssignOutfitToInteraction(destinationSpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                     }
                 }
                 return true;
             }
         }
 
-        public class EditAssignedOutfit : ImmediateInteraction<Sim, Sim>
+        public class EditAssignedOutfit : ImmediateInteraction<Sim, GameObject>
         {
             public static InteractionDefinition Singleton = new Definition();
 
             public const string sLocalizationKey = "/Interactions/EditAssignedOutfit";
 
-            public class Definition : ImmediateInteractionDefinition<Sim, Sim, EditAssignedOutfit>
+            public class Definition : ImmediateInteractionDefinition<Sim, GameObject, EditAssignedOutfit>
             {
-                public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
+                public override string GetInteractionName(Sim actor, GameObject target, InteractionObjectPair iop)
                 {
-                    return Common.Localize(target.IsFemale, sLocalizationKey + ":Name");
+                    Sim targetSim = target as Sim;
+                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
@@ -380,38 +444,56 @@ namespace Destrospean.OutfitAssignment
                     };
                 }
 
-                public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
+                public override bool Test(Sim actor, GameObject target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return Array.FindAll(target.SimDescription.GetAllOutfitAssignments(), x => !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)).Length > 0;
+                    Sim targetSim = target as Sim;
+                    return Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)).Length > 0;
                 }
             }
 
             public override bool Run()
             {
+                Sim targetSim = Target as Sim;
                 Type[] selectedInteractionInstanceTypes;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.ConvertAll(Array.FindAll(Target.SimDescription.GetAllOutfitAssignments(), x => !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType))))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.ConvertAll(Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => (targetSim != null || x.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType))))
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment = null;
                     string specialOutfitKey = "";
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
                         OutfitAssignmentUtils.OutfitAssignment tempOutfitAssignment;
-                        if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out tempOutfitAssignment) && specialOutfitKey != tempOutfitAssignment.SpecialOutfitKey)
+                        if (targetSim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out tempOutfitAssignment) && specialOutfitKey != tempOutfitAssignment.SpecialOutfitKey)
                         {
                             if (!string.IsNullOrEmpty(specialOutfitKey))
                             {
-                                Common.Notify(Common.Localize(Target.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", Target), Target.SimDescription, Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
+                                Common.Notify(Common.Localize(targetSim != null && targetSim.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetSim ?? Actor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
                                 return true;
                             }
                             outfitAssignment = tempOutfitAssignment;
                             specialOutfitKey = tempOutfitAssignment.SpecialOutfitKey;
                         }
                     }
-                    if (Target.EditSpecialOutfit(specialOutfitKey))
+                    if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                    {
+                        Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                    }
+                    if (targetSim == null && OutfitAssignmentUtils.GlobalOutfits.ContainsKey(specialOutfitKey))
+                    {
+                        Actor.AddGlobalAssignedOutfit(specialOutfitKey);
+                    }
+                    if ((targetSim ?? Actor).EditSpecialOutfit(specialOutfitKey))
                     {
                         foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                         {
-                            Target.SimDescription.AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, outfitAssignment.EntryCallbackType, outfitAssignment.ExitCallbackType);
+                            targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, outfitAssignment.EntryCallbackType, outfitAssignment.ExitCallbackType);
+                        }
+                    }
+                    if (targetSim == null)
+                    {
+                        OutfitAssignmentUtils.GlobalOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));
+                        if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                        {
+                            Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                         }
                     }
                 }
@@ -419,17 +501,18 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public class ExtendAssignedOutfitToInteraction : ImmediateInteraction<Sim, Sim>
+        public class ExtendAssignedOutfitToInteraction : ImmediateInteraction<Sim, GameObject>
         {
             public static InteractionDefinition Singleton = new Definition();
 
             public const string sLocalizationKey = "/Interactions/ExtendAssignedOutfitToInteraction";
 
-            public class Definition : ImmediateInteractionDefinition<Sim, Sim, ExtendAssignedOutfitToInteraction>
+            public class Definition : ImmediateInteractionDefinition<Sim, GameObject, ExtendAssignedOutfitToInteraction>
             {
-                public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
+                public override string GetInteractionName(Sim actor, GameObject target, InteractionObjectPair iop)
                 {
-                    return Common.Localize(target.IsFemale, sLocalizationKey + ":Name");
+                    Sim targetSim = target as Sim;
+                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
@@ -440,16 +523,19 @@ namespace Destrospean.OutfitAssignment
                     };
                 }
 
-                public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
+                public override bool Test(Sim actor, GameObject target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return target.SimDescription.GetAllOutfitAssignments().Length > 0;
+                    Sim targetSim = target as Sim;
+                    return Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => targetSim != null || x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) || x.SpecialOutfitKey.StartsWith(actor.GetGlobalAssignedOutfitPrefix())).Length > 0;
+
                 }
             }
 
             public override bool Run()
             {
-                Type[] sourceInteractionInstanceTypes, destinationInteractionInstanceTypes;
-                if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == Target.SimDescription && y.InteractionInstanceType == x.FullName)), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
+                Sim targetSim = Target as Sim;
+                Type[] destinationInteractionInstanceTypes, sourceInteractionInstanceTypes;
+                if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName)), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
                 {
                     return true;
                 }
@@ -457,39 +543,40 @@ namespace Destrospean.OutfitAssignment
                 foreach (Type interactionInstanceType in sourceInteractionInstanceTypes)
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
+                    if (targetSim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && specialOutfitKey != outfitAssignment.SpecialOutfitKey)
                     {
                         if (!string.IsNullOrEmpty(specialOutfitKey))
                         {
-                            Common.Notify(Common.Localize(Target.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", Target), Target.SimDescription, Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
+                            Common.Notify(Common.Localize(targetSim != null && targetSim.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetSim ?? Actor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
                             return true;
                         }
                         specialOutfitKey = outfitAssignment.SpecialOutfitKey;
                     }
                 }
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(Target, out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(Target, out exitCallbackType))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, sourceInteractionInstanceTypes[0], out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, sourceInteractionInstanceTypes[0], out exitCallbackType))
                 {
                     foreach (Type interactionInstanceType in destinationInteractionInstanceTypes)
                     {
-                        Target.SimDescription.AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                     }
                 }
                 return true;
             }
         }
 
-        public class UnassignOutfitToInteraction : ImmediateInteraction<Sim, Sim>
+        public class UnassignOutfitToInteraction : ImmediateInteraction<Sim, GameObject>
         {
             public static InteractionDefinition Singleton = new Definition();
 
             public const string sLocalizationKey = "/Interactions/UnassignOutfitToInteraction";
 
-            public class Definition : ImmediateInteractionDefinition<Sim, Sim, UnassignOutfitToInteraction>
+            public class Definition : ImmediateInteractionDefinition<Sim, GameObject, UnassignOutfitToInteraction>
             {
-                public override string GetInteractionName(Sim actor, Sim target, InteractionObjectPair iop)
+                public override string GetInteractionName(Sim actor, GameObject target, InteractionObjectPair iop)
                 {
-                    return Common.Localize(target.IsFemale, sLocalizationKey + ":Name");
+                    Sim targetSim = target as Sim;
+                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
                 }
 
                 public override string[] GetPath(bool isFemale)
@@ -500,29 +587,69 @@ namespace Destrospean.OutfitAssignment
                     };
                 }
 
-                public override bool Test(Sim actor, Sim target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
+                public override bool Test(Sim actor, GameObject target, bool isAutonomous, ref GreyedOutTooltipCallback greyedOutTooltipCallback)
                 {
-                    return target.SimDescription.GetAllOutfitAssignments().Length > 0;
+                    Sim targetSim = target as Sim;
+                    return Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => targetSim != null || x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) || x.SpecialOutfitKey.StartsWith(actor.GetGlobalAssignedOutfitPrefix())).Length > 0;
+
                 }
             }
 
             public override bool Run()
             {
+                Sim targetSim = Target as Sim;
                 Type[] selectedInteractionInstanceTypes;
-                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == Target.SimDescription && y.InteractionInstanceType == x.FullName))))
+                if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))))
                 {
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
                         OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                        if (Target.SimDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && Array.FindAll(Target.SimDescription.GetAllOutfitAssignments(), x => x.SpecialOutfitKey == outfitAssignment.SpecialOutfitKey).Length == 1)
+                        if (targetSim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) && Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => x.SpecialOutfitKey == outfitAssignment.SpecialOutfitKey).Length == 1)
                         {
-                            Target.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
+                            if (targetSim == null)
+                            {
+                                foreach (Sim sim in Sims3.Gameplay.Queries.GetObjects<Sim>())
+                                {
+                                    if (sim.SimDescription != null && sim.SimDescription.HasSpecialOutfit(outfitAssignment.SpecialOutfitKey))
+                                    {
+                                        sim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
+                                    }
+                                }
+                                if (OutfitAssignmentUtils.GlobalOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
+                                {
+                                    OutfitAssignmentUtils.GlobalOutfits.Remove(outfitAssignment.SpecialOutfitKey);
+                                }
+                                OutfitAssignmentUtils.GlobalOutfitsIncludingHair.RemoveAll(x => x == outfitAssignment.SpecialOutfitKey);
+                            }
+                            else
+                            {
+                                targetSim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
+                            }
                         }
-                        Target.SimDescription.UnassignOutfitToInteraction(interactionInstanceType);
+                        OutfitAssignmentUtils.UnassignOutfitToInteraction(targetSim.GetSimDescription(), interactionInstanceType);
                     }
                 }
                 return true;
             }
+        }
+
+        public static bool ShowIncludeHairDialog(string globalAssignedSpecialOutfitKey)
+        {
+            if (Sims3.UI.AcceptCancelDialog.Show(Common.Localize("/Dialogs/IncludeHairDialog:Title")))
+            {
+                if (!OutfitAssignmentUtils.GlobalOutfitsIncludingHair.Contains(globalAssignedSpecialOutfitKey))
+                {
+                    OutfitAssignmentUtils.GlobalOutfitsIncludingHair.Add(globalAssignedSpecialOutfitKey);
+                }
+                return true;
+            }
+            OutfitAssignmentUtils.GlobalOutfitsIncludingHair.RemoveAll(x => x == globalAssignedSpecialOutfitKey);
+            return false;
+        }
+
+        public static Sims3.Gameplay.CAS.SimDescription GetSimDescription(this Sim sim)
+        {
+            return sim == null ? null : sim.SimDescription;
         }
     }
 }

@@ -156,7 +156,7 @@ namespace Destrospean
                 {
                     interactionInstance.Target.AddToUseList(interactionInstance.InstanceActor);
                 }
-                if (interactionInstance.Target.LookAtTuning != null && interactionInstance.Target.LookAtTuning.DefaultInteractionLookAtThreshold >= 0)
+                if (interactionInstance.Target.LookAtTuning != null && interactionInstance.Target.LookAtTuning.DefaultInteractionLookAtThreshold > -1)
                 {
                     interactionInstance.InstanceActor.LookAtManager.SetInteractionLookAtThreshold(interactionInstance.Target.LookAtTuning.DefaultInteractionLookAtThreshold);
                 }
@@ -176,7 +176,7 @@ namespace Destrospean
                     interactionInstance.mInteractionState = InteractionInstance.InteractionState.StandardExitDoNotValidateUseList;
                 }
                 Sims3.Gameplay.Abstracts.LookAtTuning lookAtTuning = (interactionInstance.Target != null) ? interactionInstance.Target.LookAtTuning : null;
-                if (lookAtTuning != null && lookAtTuning.DefaultInteractionLookAtThreshold >= 0)
+                if (lookAtTuning != null && lookAtTuning.DefaultInteractionLookAtThreshold > -1)
                 {
                     interactionInstance.InstanceActor.LookAtManager.ClearInteractionLookAt();
                 }
