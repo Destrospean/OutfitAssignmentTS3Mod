@@ -67,7 +67,7 @@ namespace Destrospean.OutfitAssignment.MasterController
                     {
                         Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
-                    if (targetSim == null && OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(specialOutfitKey))
+                    if (targetSim == null && OutfitAssignmentUtils.GlobalOutfits.ContainsKey(specialOutfitKey))
                     {
                         Actor.AddGlobalAssignedOutfit(specialOutfitKey);
                     }
@@ -84,7 +84,7 @@ namespace Destrospean.OutfitAssignment.MasterController
                     }
                     if (targetSim == null)
                     {
-                        OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey] = new SimOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey).Key);
+                        OutfitAssignmentUtils.GlobalOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));
                         if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                         {
                             Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
@@ -143,7 +143,7 @@ namespace Destrospean.OutfitAssignment.MasterController
                     {
                         Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
-                    if (targetSim == null && OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(specialOutfitKey))
+                    if (targetSim == null && OutfitAssignmentUtils.GlobalOutfits.ContainsKey(specialOutfitKey))
                     {
                         Actor.AddGlobalAssignedOutfit(specialOutfitKey);
                     }
@@ -156,7 +156,7 @@ namespace Destrospean.OutfitAssignment.MasterController
                     }
                     if (targetSim == null)
                     {
-                        OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey] = new SimOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey).Key);
+                        OutfitAssignmentUtils.GlobalOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));
                         if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                         {
                             Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);

@@ -189,7 +189,7 @@ namespace Destrospean.OutfitAssignment
                     {
                         Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
-                    if (targetSim == null && OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(specialOutfitKey))
+                    if (targetSim == null && OutfitAssignmentUtils.GlobalOutfits.ContainsKey(specialOutfitKey))
                     {
                         Actor.AddGlobalAssignedOutfit(specialOutfitKey);
                     }
@@ -206,7 +206,7 @@ namespace Destrospean.OutfitAssignment
                     }
                     if (targetSim == null)
                     {
-                        OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey] = new SimOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey).Key);
+                        OutfitAssignmentUtils.GlobalOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));;
                         if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                         {
                             Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
@@ -331,14 +331,14 @@ namespace Destrospean.OutfitAssignment
                         }
                         if (includeHair)
                         {
-                            if (!OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.Contains(outfitAssignment.SpecialOutfitKey))
+                            if (!OutfitAssignmentUtils.GlobalOutfitsIncludingHair.Contains(outfitAssignment.SpecialOutfitKey))
                             {
-                                OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.Add(outfitAssignment.SpecialOutfitKey);
+                                OutfitAssignmentUtils.GlobalOutfitsIncludingHair.Add(outfitAssignment.SpecialOutfitKey);
                             }
                         }
                         else
                         {
-                            OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.RemoveAll(x => x == outfitAssignment.SpecialOutfitKey);
+                            OutfitAssignmentUtils.GlobalOutfitsIncludingHair.RemoveAll(x => x == outfitAssignment.SpecialOutfitKey);
                         }
                     }
                 }
@@ -403,7 +403,7 @@ namespace Destrospean.OutfitAssignment
                     string destinationSpecialOutfitKey = (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID();
                     if (targetSim == null)
                     {
-                        OutfitAssignmentUtils.GlobalAssignedOutfits[destinationSpecialOutfitKey] = new SimOutfit(OutfitAssignmentUtils.GlobalAssignedOutfits[sourceSpecialOutfitKey].Key);
+                        OutfitAssignmentUtils.GlobalOutfits[destinationSpecialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(OutfitAssignmentUtils.GlobalOutfits[sourceSpecialOutfitKey]);
                         if (targetSim == null)
                         {
                             ShowIncludeHairDialog(destinationSpecialOutfitKey);
@@ -477,7 +477,7 @@ namespace Destrospean.OutfitAssignment
                     {
                         Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
-                    if (targetSim == null && OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(specialOutfitKey))
+                    if (targetSim == null && OutfitAssignmentUtils.GlobalOutfits.ContainsKey(specialOutfitKey))
                     {
                         Actor.AddGlobalAssignedOutfit(specialOutfitKey);
                     }
@@ -490,7 +490,7 @@ namespace Destrospean.OutfitAssignment
                     }
                     if (targetSim == null)
                     {
-                        OutfitAssignmentUtils.GlobalAssignedOutfits[specialOutfitKey] = new SimOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey).Key);
+                        OutfitAssignmentUtils.GlobalOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));
                         if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                         {
                             Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
@@ -615,11 +615,11 @@ namespace Destrospean.OutfitAssignment
                                         sim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
                                     }
                                 }
-                                if (OutfitAssignmentUtils.GlobalAssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
+                                if (OutfitAssignmentUtils.GlobalOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
                                 {
-                                    OutfitAssignmentUtils.GlobalAssignedOutfits.Remove(outfitAssignment.SpecialOutfitKey);
+                                    OutfitAssignmentUtils.GlobalOutfits.Remove(outfitAssignment.SpecialOutfitKey);
                                 }
-                                OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.RemoveAll(x => x == outfitAssignment.SpecialOutfitKey);
+                                OutfitAssignmentUtils.GlobalOutfitsIncludingHair.RemoveAll(x => x == outfitAssignment.SpecialOutfitKey);
                             }
                             else
                             {
@@ -637,13 +637,13 @@ namespace Destrospean.OutfitAssignment
         {
             if (Sims3.UI.AcceptCancelDialog.Show(Common.Localize("/Dialogs/IncludeHairDialog:Title")))
             {
-                if (!OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.Contains(globalAssignedSpecialOutfitKey))
+                if (!OutfitAssignmentUtils.GlobalOutfitsIncludingHair.Contains(globalAssignedSpecialOutfitKey))
                 {
-                    OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.Add(globalAssignedSpecialOutfitKey);
+                    OutfitAssignmentUtils.GlobalOutfitsIncludingHair.Add(globalAssignedSpecialOutfitKey);
                 }
                 return true;
             }
-            OutfitAssignmentUtils.GlobalAssignedOutfitsIncludingHair.RemoveAll(x => x == globalAssignedSpecialOutfitKey);
+            OutfitAssignmentUtils.GlobalOutfitsIncludingHair.RemoveAll(x => x == globalAssignedSpecialOutfitKey);
             return false;
         }
 

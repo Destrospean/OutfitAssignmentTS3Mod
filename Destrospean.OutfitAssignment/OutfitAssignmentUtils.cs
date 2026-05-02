@@ -35,10 +35,10 @@ namespace Destrospean.OutfitAssignment
             };
 
         [PersistableStatic(true)]
-        public static Dictionary<string, SimOutfit> GlobalAssignedOutfits = new Dictionary<string, SimOutfit>();
+        public static Dictionary<string, AssignedOutfit> GlobalOutfits = new Dictionary<string, AssignedOutfit>();
 
         [PersistableStatic(true)]
-        public static List<string> GlobalAssignedOutfitsIncludingHair = new List<string>();
+        public static List<string> GlobalOutfitsIncludingHair = new List<string>();
 
         public const string OutfitAssignmentCategoryPrefix = "OutfitAssignment_Category_";
 
@@ -49,6 +49,47 @@ namespace Destrospean.OutfitAssignment
         public static List<Outfit> PreviousOutfits = new List<Outfit>();
 
         public static List<SimDescription> TimeToChangeBackList = new List<SimDescription>();
+
+        [Persistable]
+        public class AssignedOutfit
+        {
+            public List<BodyTypes> PartOverrides = new List<BodyTypes>(ClothingTypes);
+
+            public List<SavedPart> Parts;
+
+            [Persistable]
+            public class SavedPart
+            {
+                public CASPart Part;
+
+                public string Preset;
+
+                public SavedPart()
+                {
+                }
+
+                public SavedPart(CASPart part, string preset)
+                {
+                    Part = part;
+                    Preset = preset;
+                }
+            }
+            
+            public AssignedOutfit()
+            {
+            }
+
+            public AssignedOutfit(AssignedOutfit outfit)
+            {
+                Parts = outfit.Parts.ConvertAll(x => new SavedPart(x.Part, x.Preset));
+                PartOverrides = new List<BodyTypes>(outfit.PartOverrides);
+            }
+
+            public AssignedOutfit(SimOutfit outfit)
+            {
+                Parts = new List<CASPart>(outfit.Parts).ConvertAll(x => new SavedPart(x, outfit.GetPartPreset(x.Key)));
+            }
+        }
 
         [Persistable]
         public class Outfit
@@ -85,18 +126,18 @@ namespace Destrospean.OutfitAssignment
 
         public static bool AddGlobalAssignedOutfit(this Sim sim, string globalAssignedSpecialOutfitKey, string simSpecialOutfitKey = null)
         {
-            SimOutfit baseOutfit = sim.SimDescription.GetOutfit(OutfitCategories.Everyday, 0),
-            globalAssignedOutfit;
-            if (!GlobalAssignedOutfits.TryGetValue(globalAssignedSpecialOutfitKey, out globalAssignedOutfit))
+            SimOutfit baseOutfit = sim.SimDescription.GetOutfit(OutfitCategories.Everyday, 0);
+            AssignedOutfit globalAssignedOutfit;
+            if (!GlobalOutfits.TryGetValue(globalAssignedSpecialOutfitKey, out globalAssignedOutfit))
             {
                 return false;
             }
-            bool includeHair = GlobalAssignedOutfitsIncludingHair.Contains(globalAssignedSpecialOutfitKey);
+            bool includeHair = GlobalOutfitsIncludingHair.Contains(globalAssignedSpecialOutfitKey);
             simSpecialOutfitKey = simSpecialOutfitKey ?? globalAssignedSpecialOutfitKey;
             if (sim.SimDescription.HasSpecialOutfit(simSpecialOutfitKey))
             {
                 SimOutfit simSpecialOutfit = sim.SimDescription.GetSpecialOutfit(simSpecialOutfitKey);
-                if (Array.TrueForAll(simSpecialOutfit.Parts, x => !Array.Exists(ClothingTypes, y => y == x.BodyType) || x.BodyType == BodyTypes.Hair && !includeHair || Array.Exists(globalAssignedOutfit.Parts, y => x.Equals(y) && globalAssignedOutfit.GetPartPreset(y.Key) == simSpecialOutfit.GetPartPreset(x.Key))))
+                if (Array.TrueForAll(simSpecialOutfit.Parts, x => !Array.Exists(ClothingTypes, y => y == x.BodyType) || x.BodyType == BodyTypes.Hair && !includeHair || globalAssignedOutfit.Parts.Exists(y => x.Equals(y.Part) && y.Preset == simSpecialOutfit.GetPartPreset(x.Key))))
                 {
                     return true;
                 }
@@ -108,11 +149,11 @@ namespace Destrospean.OutfitAssignment
                 })
             {
                 simBuilder.PrepareForOutfit(baseOutfit);
-                foreach (CASPart casPart in globalAssignedOutfit.Parts)
+                foreach (AssignedOutfit.SavedPart savedPart in globalAssignedOutfit.Parts)
                 {
-                    if (Array.Exists(ClothingTypes, x => x == casPart.BodyType))
+                    if (Array.Exists(ClothingTypes, x => x == savedPart.Part.BodyType))
                     {
-                        switch (casPart.BodyType)
+                        switch (savedPart.Part.BodyType)
                         {
                             case BodyTypes.FullBody:
                                 simBuilder.RemoveParts(BodyTypes.LowerBody, BodyTypes.UpperBody);
@@ -128,14 +169,13 @@ namespace Destrospean.OutfitAssignment
                                 simBuilder.RemoveParts(BodyTypes.FullBody);
                                 break;
                         }
-                        simBuilder.RemoveParts(casPart.BodyType);
-                        simBuilder.AddPart(casPart);
-                        string preset = globalAssignedOutfit.GetPartPreset(casPart.Key);
-                        if (!string.IsNullOrEmpty(preset))
+                        simBuilder.RemoveParts(savedPart.Part.BodyType);
+                        simBuilder.AddPart(savedPart.Part);
+                        if (!string.IsNullOrEmpty(savedPart.Preset))
                         {
-                            if (CASUtils.ApplyPresetToPart(simBuilder, casPart, preset))
+                            if (CASUtils.ApplyPresetToPart(simBuilder, savedPart.Part, savedPart.Preset))
                             {
-                                simBuilder.SetPartPreset(casPart.Key, null, preset);
+                                simBuilder.SetPartPreset(savedPart.Part.Key, null, savedPart.Preset);
                             }
                         }
                     }
