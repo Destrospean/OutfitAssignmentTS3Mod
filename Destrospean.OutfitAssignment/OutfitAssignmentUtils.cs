@@ -162,10 +162,10 @@ namespace Destrospean.OutfitAssignment
 
         static OutfitAssignmentUtils()
         {
-            List<BodyTypes> bodyTypes = new List<BodyTypes>();
+            List<BodyTypes> overridableBodyTypes = new List<BodyTypes>();
             foreach (BodyTypes bodyType in Enum.GetValues(typeof(BodyTypes)))
             {
-                if (bodyType < BodyTypes.PetBody && !bodyTypes.Contains(bodyType))
+                if (bodyType < BodyTypes.PetBody && !overridableBodyTypes.Contains(bodyType))
                 {
                     switch (bodyType)
                     {
@@ -182,10 +182,10 @@ namespace Destrospean.OutfitAssignment
                         case BodyTypes.TattooTemplate:
                             continue;
                     }
-                    bodyTypes.Add(bodyType);
+                    overridableBodyTypes.Add(bodyType);
                 }
             }
-            OverridableBodyTypes = bodyTypes.ToArray();
+            OverridableBodyTypes = overridableBodyTypes.ToArray();
         }
 
         public static bool AddAssignedOutfit(this Sim sim, string assignedSpecialOutfitKey, string simSpecialOutfitKey = null)
