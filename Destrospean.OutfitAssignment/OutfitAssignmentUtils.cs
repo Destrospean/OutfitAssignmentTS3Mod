@@ -301,30 +301,29 @@ namespace Destrospean.OutfitAssignment
         {
             try
             {
-                preSelectedPartOverrides = preSelectedPartOverrides ?? assignedOutfit.PartOverrides.ToArray();
                 const string localizationPath = Common.kLocalizationPath + "/Dialogs/PartOverrideListDialog";
+                List<BodyTypes> partOverrideList = new List<BodyTypes>(preSelectedPartOverrides ?? assignedOutfit.PartOverrides.ToArray());
                 bool cancelled, confirmed;
-                List<BodyTypes> selectedPartOverrides = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(localizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                while (true)
+                {
+                    List<BodyTypes> selectedPartOverrides = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(localizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                        {
+                            new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), new List<BodyTypes>(OverridableBodyTypes).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                        }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>>
+                        {
+                            new BodyTypeColumn(localizationPath),
+                            new PartOverrideEnabledColumn(localizationPath, partOverrideList.ToArray())
+                        }, 1, out confirmed, out cancelled, true);
+                    if (cancelled)
                     {
-                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), new List<BodyTypes>(OverridableBodyTypes).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
-                    }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>>
+                        partOverrides = null;
+                        return false;
+                    }
+                    if (confirmed)
                     {
-                        new BodyTypeColumn(localizationPath),
-                        new PartOverrideEnabledColumn(localizationPath, preSelectedPartOverrides)
-                    }, 1, out confirmed, out cancelled, true);
-                if (cancelled)
-                {
-                    partOverrides = new BodyTypes[0];
-                    return false;
-                }
-                List<BodyTypes> partOverrideList = new List<BodyTypes>(preSelectedPartOverrides);
-                if (confirmed)
-                {
-                    partOverrides = partOverrideList.ToArray();
-                    return true;
-                }
-                if (partOverrideList != null && partOverrideList.Count > 0)
-                {
+                        partOverrides = partOverrideList.ToArray();
+                        return true;
+                    }
                     if (partOverrideList.Contains(selectedPartOverrides[0]))
                     {
                         partOverrideList.Remove(selectedPartOverrides[0]);
@@ -334,12 +333,11 @@ namespace Destrospean.OutfitAssignment
                         partOverrideList.Add(selectedPartOverrides[0]);
                     }
                 }
-                return ShowPartOverridesDialog(assignedOutfit, out partOverrides, partOverrideList.ToArray());
             }
             catch (Exception ex)
             {
                 ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
-                partOverrides = new BodyTypes[0];
+                partOverrides = null;
                 return false;
             }
         }
@@ -363,7 +361,7 @@ namespace Destrospean.OutfitAssignment
             }
             else
             {
-                if (outfitAssignment.SimDescription == null)
+                if (AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
                 {
                     sim.AddAssignedOutfit(outfitAssignment.SpecialOutfitKey);
                 }

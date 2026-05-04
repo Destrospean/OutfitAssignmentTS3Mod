@@ -12,7 +12,39 @@ namespace Destrospean.OutfitAssignment
 {
     public static class OutfitExtensions
     {
+        public delegate bool EditSpecialOutfitFunc(Sim sim, string specialOutfitKey);
+
         public delegate SimOutfit OutfitFunc(SimBuilder simBuilder, OutfitCategories outfitCategory, int outfitIndex);
+
+        public static EditSpecialOutfitFunc EditSpecialOutfit = (sim, specialOutfitKey) =>
+            {
+                SimDescription simDescription = sim.SimDescription;
+                if (!simDescription.HasSpecialOutfit(specialOutfitKey))
+                {
+                    simDescription.AddSpecialOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), specialOutfitKey);
+                }
+                OutfitCategories previousOutfitCategory = sim.CurrentOutfitCategory;
+                int previousOutfitIndex = sim.CurrentOutfitIndex;
+                simDescription.AddOutfit(simDescription.GetSpecialOutfit(specialOutfitKey), OutfitCategories.Everyday, 0);
+                simDescription.RemoveSpecialOutfit(specialOutfitKey);
+                sim.SwitchToOutfitWithoutSpin(OutfitCategories.Everyday, 0);
+                CASLogic casLogic = CASLogic.GetSingleton();
+                casLogic.ShowUI += OnShowUI;
+                casLogic.UseTempSimDesc = true;
+                casLogic.LoadSim(simDescription, sim.CurrentOutfitCategory, sim.CurrentOutfitIndex);
+                CASChangeReporter.Instance.ClearChanges();
+                GameStates.TransitionToCASStylistMode();
+                while (GameStates.NextInWorldStateId != 0)
+                {
+                    Simulator.Sleep(0);
+                }
+                CASChangeReporter.Instance.SendChangedEvents(sim);
+                casLogic.ShowUI -= OnShowUI;
+                simDescription.AddSpecialOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), specialOutfitKey);
+                simDescription.RemoveOutfit(OutfitCategories.Everyday, 0, true);
+                sim.SwitchToOutfitWithoutSpin(previousOutfitCategory, previousOutfitIndex);
+                return !CASChangeReporter.Instance.CasCancelled;
+            };
 
         public static void ApplyToAllOutfits(this SimDescription simDescription, OutfitFunc outfitFunc, bool spin = false)
         {
@@ -103,36 +135,6 @@ namespace Destrospean.OutfitAssignment
             ResourceKey key = OutfitUtils.ApplyUniformToOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), new SimOutfit(uniformKey), simDescription, "CreateAndAddSpecialOutfit");
             simDescription.AddSpecialOutfit(new SimOutfit(key), specialOutfitKey);
             return key;
-        }
-
-        public static bool EditSpecialOutfit(this Sim sim, string specialOutfitKey)
-        {
-            SimDescription simDescription = sim.SimDescription;
-            if (!simDescription.HasSpecialOutfit(specialOutfitKey))
-            {
-                simDescription.AddSpecialOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), specialOutfitKey);
-            }
-            OutfitCategories previousOutfitCategory = sim.CurrentOutfitCategory;
-            int previousOutfitIndex = sim.CurrentOutfitIndex;
-            simDescription.AddOutfit(simDescription.GetSpecialOutfit(specialOutfitKey), OutfitCategories.Everyday, 0);
-            simDescription.RemoveSpecialOutfit(specialOutfitKey);
-            sim.SwitchToOutfitWithoutSpin(OutfitCategories.Everyday, 0);
-            CASLogic casLogic = CASLogic.GetSingleton();
-            casLogic.ShowUI += OnShowUI;
-            casLogic.UseTempSimDesc = true;
-            casLogic.LoadSim(simDescription, sim.CurrentOutfitCategory, sim.CurrentOutfitIndex);
-            CASChangeReporter.Instance.ClearChanges();
-            GameStates.TransitionToCASStylistMode();
-            while (GameStates.NextInWorldStateId != 0)
-            {
-                Simulator.Sleep(0);
-            }
-            CASChangeReporter.Instance.SendChangedEvents(sim);
-            casLogic.ShowUI -= OnShowUI;
-            simDescription.AddSpecialOutfit(simDescription.GetOutfit(OutfitCategories.Everyday, 0), specialOutfitKey);
-            simDescription.RemoveOutfit(OutfitCategories.Everyday, 0, true);
-            sim.SwitchToOutfitWithoutSpin(previousOutfitCategory, previousOutfitIndex);
-            return !CASChangeReporter.Instance.CasCancelled;
         }
 
         public static void OnShowUI(bool toShow)

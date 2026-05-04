@@ -123,16 +123,24 @@ namespace Destrospean.OutfitAssignment
 
         public class AssignOutfitToInteraction : ImmediateInteraction<Sim, GameObject>
         {
-            public static InteractionDefinition Singleton = new Definition();
+            public static InteractionDefinition PartialOutfitSingleton = new Definition(true),
+            Singleton = new Definition();
 
             public const string sLocalizationKey = "/Interactions/AssignOutfitToInteraction";
 
             public class Definition : ImmediateInteractionDefinition<Sim, GameObject, AssignOutfitToInteraction>
             {
+                public bool IsPartial;
+
+                public Definition(bool isPartial = false)
+                {
+                    IsPartial = isPartial;
+                }
+
                 public override string GetInteractionName(Sim actor, GameObject target, InteractionObjectPair iop)
                 {
                     Sim targetSim = target as Sim;
-                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
+                    return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + "/Names:" + (IsPartial ? "Partial" : "Full"));
                 }
 
                 public override string[] GetPath(bool isFemale)
@@ -160,7 +168,9 @@ namespace Destrospean.OutfitAssignment
 
             public override bool Run()
             {
-                Sim targetSim = Target as Sim;
+                bool isPartial = ((Definition)InteractionDefinition).IsPartial;
+                Sim targetSim = Target as Sim,
+                targetOrActor = targetSim ?? Actor;
                 Type[] selectedInteractionInstanceTypes;
                 InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
                 if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => !OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName))) && TryGetEntryCallbackType(targetSim, selectedInteractionInstanceTypes[0], out entryCallbackType) && TryGetExitCallbackType(targetSim, selectedInteractionInstanceTypes[0], out exitCallbackType))
@@ -173,44 +183,44 @@ namespace Destrospean.OutfitAssignment
                         {
                             if (!string.IsNullOrEmpty(specialOutfitKey))
                             {
-                                Common.Notify(Common.Localize(targetSim == null || targetSim.IsFemale, sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetSim ?? Actor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
+                                Common.Notify(Common.Localize(targetSim == null || targetSim.IsFemale, sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetOrActor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
                                 return true;
                             }
                             specialOutfitKey = outfitAssignment.SpecialOutfitKey;
                         }
                     }
                     specialOutfitKey = string.IsNullOrEmpty(specialOutfitKey) ? (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID() : specialOutfitKey;
-                    bool outfitIsPreexisting = targetSim != null && targetSim.SimDescription.HasSpecialOutfit(specialOutfitKey);
-                    if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                    bool outfitIsPreexisting = targetSim != null && !isPartial && targetSim.SimDescription.HasSpecialOutfit(specialOutfitKey);
+                    if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey) || isPartial && targetSim.SimDescription.HasSpecialOutfit(specialOutfitKey))
                     {
-                        Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                        targetOrActor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
-                    if (targetSim == null && OutfitAssignmentUtils.AssignedOutfits.ContainsKey(specialOutfitKey))
+                    if ((targetSim == null || isPartial) && OutfitAssignmentUtils.AssignedOutfits.ContainsKey(specialOutfitKey))
                     {
-                        Actor.AddAssignedOutfit(specialOutfitKey);
+                        targetOrActor.AddAssignedOutfit(specialOutfitKey);
                     }
-                    if ((targetSim ?? Actor).EditSpecialOutfit(specialOutfitKey))
+                    if (OutfitExtensions.EditSpecialOutfit(targetOrActor, specialOutfitKey))
                     {
                         foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                         {
                             targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                         }
-                        if (targetSim == null)
+                        if (targetSim == null || isPartial)
                         {
                             BodyTypes[] partOverrides;
-                            if (OutfitAssignmentUtils.ShowPartOverridesDialog(OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey)), out partOverrides))
+                            if (OutfitAssignmentUtils.ShowPartOverridesDialog(OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(targetOrActor.SimDescription.GetSpecialOutfit(specialOutfitKey)), out partOverrides, isPartial ? new BodyTypes[0] : null))
                             {
                                 OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey].PartOverrides = new List<BodyTypes>(partOverrides);
-                                if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                                if (targetOrActor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                                 {
-                                    Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                                    targetOrActor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                                 }
                             }
                         }
                     }
                     else if (!outfitIsPreexisting)
                     {
-                        (targetSim ?? Actor).SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                        targetOrActor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
                 }
                 return true;
@@ -401,7 +411,7 @@ namespace Destrospean.OutfitAssignment
                 if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out destinationInteractionInstanceTypes, null, Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationNamespace"), Common.Localize(sLocalizationKey + "/Miscellaneous:SelectDestinationInteraction")) && AssignOutfitToInteraction.TryGetEntryCallbackType(targetSim, sourceInteractionInstanceTypes[0], out entryCallbackType) && AssignOutfitToInteraction.TryGetExitCallbackType(targetSim, sourceInteractionInstanceTypes[0], out exitCallbackType))
                 {
                     string destinationSpecialOutfitKey = (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID();
-                    if (targetSim == null)
+                    if (OutfitAssignmentUtils.AssignedOutfits.ContainsKey(sourceSpecialOutfitKey))
                     {
                         BodyTypes[] partOverrides;
                         if (OutfitAssignmentUtils.ShowPartOverridesDialog(OutfitAssignmentUtils.AssignedOutfits[destinationSpecialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(OutfitAssignmentUtils.AssignedOutfits[sourceSpecialOutfitKey]), out partOverrides))
@@ -453,7 +463,8 @@ namespace Destrospean.OutfitAssignment
 
             public override bool Run()
             {
-                Sim targetSim = Target as Sim;
+                Sim targetSim = Target as Sim,
+                targetOrActor = targetSim ?? Actor;
                 Type[] selectedInteractionInstanceTypes;
                 if (InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, Array.ConvertAll(Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => (targetSim != null || x.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && !x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix)), x => Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType))))
                 {
@@ -466,40 +477,41 @@ namespace Destrospean.OutfitAssignment
                         {
                             if (!string.IsNullOrEmpty(specialOutfitKey))
                             {
-                                Common.Notify(Common.Localize(targetSim != null && targetSim.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetSim ?? Actor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
+                                Common.Notify(Common.Localize(targetSim != null && targetSim.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetOrActor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
                                 return true;
                             }
                             outfitAssignment = tempOutfitAssignment;
                             specialOutfitKey = tempOutfitAssignment.SpecialOutfitKey;
                         }
                     }
-                    if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                    bool isPartial = targetSim != null && OutfitAssignmentUtils.AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey);
+                    if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey) || isPartial && targetSim.SimDescription.HasSpecialOutfit(specialOutfitKey))
                     {
-                        Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                        targetOrActor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
-                    if (targetSim == null && OutfitAssignmentUtils.AssignedOutfits.ContainsKey(specialOutfitKey))
+                    if ((targetSim == null || isPartial) && OutfitAssignmentUtils.AssignedOutfits.ContainsKey(specialOutfitKey))
                     {
-                        Actor.AddAssignedOutfit(specialOutfitKey);
+                        targetOrActor.AddAssignedOutfit(specialOutfitKey);
                     }
-                    if ((targetSim ?? Actor).EditSpecialOutfit(specialOutfitKey))
+                    if (OutfitExtensions.EditSpecialOutfit(targetOrActor, specialOutfitKey))
                     {
                         foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                         {
                             targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, outfitAssignment.EntryCallbackType, outfitAssignment.ExitCallbackType);
                         }
-                        if (targetSim == null)
+                        if (targetSim == null || isPartial)
                         {
-                            OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey))
+                            OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(targetOrActor.SimDescription.GetSpecialOutfit(specialOutfitKey))
                                 {
                                     PartOverrides = OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey].PartOverrides
                                 };
                         }
                     }
-                    if (targetSim == null)
+                    if (targetSim == null || isPartial)
                     {
-                        if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                        if (targetOrActor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                         {
-                            Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                            targetOrActor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                         }
                     }
                 }
@@ -622,6 +634,13 @@ namespace Destrospean.OutfitAssignment
                                     }
                                 }
                                 if (OutfitAssignmentUtils.AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
+                                {
+                                    OutfitAssignmentUtils.AssignedOutfits.Remove(outfitAssignment.SpecialOutfitKey);
+                                }
+                            }
+                            else if (OutfitAssignmentUtils.AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
+                            {
+                                if (Array.FindAll(targetSim.SimDescription.GetAllOutfitAssignments(), x => x.SpecialOutfitKey == outfitAssignment.SpecialOutfitKey).Length == 1)
                                 {
                                     OutfitAssignmentUtils.AssignedOutfits.Remove(outfitAssignment.SpecialOutfitKey);
                                 }

@@ -84,30 +84,32 @@ namespace Destrospean.OutfitAssignment
                     }
                 }
                 bool cancelled, confirmed;
-                List<string> selectedNamespaces = Dialogs.ObjectPickerDialog.Show(namespaceListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(namespaceListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
-                    {
-                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), namespaces.ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
-                    }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>>
-                    {
-                        new TextColumn(namespaceListDialogLocalizationPath)
-                    }, 1, out confirmed, out cancelled);
-                if (!confirmed || selectedNamespaces == null || selectedNamespaces.Count == 0)
+                while (true)
                 {
-                    selectedInteractionInstanceTypes = null;
-                    return false;
-                }
-                selectedInteractionInstanceTypes = (Dialogs.ObjectPickerDialog.Show(interactionListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(interactionListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                    List<string> selectedNamespaces = Dialogs.ObjectPickerDialog.Show(namespaceListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(namespaceListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                        {
+                            new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), namespaces.ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                        }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>>
+                        {
+                            new TextColumn(namespaceListDialogLocalizationPath)
+                        }, 1, out confirmed, out cancelled);
+                    if (cancelled)
                     {
-                        new ObjectPicker.TabInfo("shop_all_r2", selectedNamespaces[0], new List<Type>(allInteractionInstanceTypes).FindAll(x => x.Namespace == selectedNamespaces[0]).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
-                    }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
+                        selectedInteractionInstanceTypes = null;
+                        return false;
+                    }
+                    selectedInteractionInstanceTypes = (Dialogs.ObjectPickerDialog.Show(interactionListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(interactionListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                        {
+                            new ObjectPicker.TabInfo("shop_all_r2", selectedNamespaces[0], new List<Type>(allInteractionInstanceTypes).FindAll(x => x.Namespace == selectedNamespaces[0]).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                        }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
+                        {
+                            new TypeColumn(interactionListDialogLocalizationPath)
+                        }, int.MaxValue, out confirmed, out cancelled) ?? new List<Type>()).ToArray();
+                    if (confirmed)
                     {
-                        new TypeColumn(interactionListDialogLocalizationPath)
-                    }, int.MaxValue, out confirmed, out cancelled) ?? new List<Type>()).ToArray();
-                if (!confirmed || selectedInteractionInstanceTypes.Length == 0)
-                {
-                    return TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, allInteractionInstanceTypes, namespaceListTitle, interactionListTitle);
+                        return true;
+                    }
                 }
-                return true;
             }
             catch (Exception ex)
             {
