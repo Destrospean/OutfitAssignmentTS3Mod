@@ -58,18 +58,14 @@ namespace Destrospean.OutfitAssignment.MasterController
                         }
                     }
                     specialOutfitKey = string.IsNullOrEmpty(specialOutfitKey) ? (targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix() : "OutfitAssignment_") + Sims3.SimIFace.CustomContent.DownloadContent.GenerateGUID() : specialOutfitKey;
-                    if (targetSim == null)
-                    {
-                        Interactions.ShowIncludeHairDialog(specialOutfitKey);
-                    }
                     bool outfitIsPreexisting = targetSim != null && targetSim.SimDescription.HasSpecialOutfit(specialOutfitKey);
                     if (targetSim == null && Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                     {
                         Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
-                    if (targetSim == null && OutfitAssignmentUtils.GlobalOutfits.ContainsKey(specialOutfitKey))
+                    if (targetSim == null && OutfitAssignmentUtils.AssignedOutfits.ContainsKey(specialOutfitKey))
                     {
-                        Actor.AddGlobalAssignedOutfit(specialOutfitKey);
+                        Actor.AddAssignedOutfit(specialOutfitKey);
                     }
                     if (EditSpecialOutfit(targetSim ?? Actor, specialOutfitKey))
                     {
@@ -77,18 +73,22 @@ namespace Destrospean.OutfitAssignment.MasterController
                         {
                             targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
                         }
+                        if (targetSim == null)
+                        {
+                            BodyTypes[] partOverrides;
+                            if (OutfitAssignmentUtils.ShowPartOverridesDialog(OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey)), out partOverrides))
+                            {
+                                OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey].PartOverrides = new System.Collections.Generic.List<BodyTypes>(partOverrides);
+                            }
+                            if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
+                            {
+                                Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
+                            }
+                        }
                     }
                     else if (!outfitIsPreexisting)
                     {
                         (targetSim ?? Actor).SimDescription.RemoveSpecialOutfit(specialOutfitKey);
-                    }
-                    if (targetSim == null)
-                    {
-                        OutfitAssignmentUtils.GlobalOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));
-                        if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
-                        {
-                            Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
-                        }
                     }
                 }
                 return true;
@@ -143,9 +143,9 @@ namespace Destrospean.OutfitAssignment.MasterController
                     {
                         Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);
                     }
-                    if (targetSim == null && OutfitAssignmentUtils.GlobalOutfits.ContainsKey(specialOutfitKey))
+                    if (targetSim == null && OutfitAssignmentUtils.AssignedOutfits.ContainsKey(specialOutfitKey))
                     {
-                        Actor.AddGlobalAssignedOutfit(specialOutfitKey);
+                        Actor.AddAssignedOutfit(specialOutfitKey);
                     }
                     if (EditSpecialOutfit(targetSim ?? Actor, specialOutfitKey))
                     {
@@ -153,10 +153,16 @@ namespace Destrospean.OutfitAssignment.MasterController
                         {
                             targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, outfitAssignment.EntryCallbackType, outfitAssignment.ExitCallbackType);
                         }
+                        if (targetSim == null)
+                        {
+                            OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey))
+                                {
+                                    PartOverrides = OutfitAssignmentUtils.AssignedOutfits[specialOutfitKey].PartOverrides
+                                };
+                        }
                     }
                     if (targetSim == null)
                     {
-                        OutfitAssignmentUtils.GlobalOutfits[specialOutfitKey] = new OutfitAssignmentUtils.AssignedOutfit(Actor.SimDescription.GetSpecialOutfit(specialOutfitKey));
                         if (Actor.SimDescription.HasSpecialOutfit(specialOutfitKey))
                         {
                             Actor.SimDescription.RemoveSpecialOutfit(specialOutfitKey);

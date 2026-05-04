@@ -5,45 +5,48 @@ using Sims3.Gameplay.ActorSystems;
 using Sims3.Gameplay.CAS;
 using Sims3.SimIFace;
 using Sims3.SimIFace.CAS;
+using Sims3.UI;
 using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
 
 namespace Destrospean.OutfitAssignment
 {
     public static class OutfitAssignmentUtils
     {
-        public static readonly BodyTypes[] ClothingTypes =
-            {
-                BodyTypes.Accessories,
-                BodyTypes.Armband,
-                BodyTypes.Bracelet,
-                BodyTypes.Earrings,
-                BodyTypes.FullBody,
-                BodyTypes.Glasses,
-                BodyTypes.Gloves,
-                BodyTypes.Hair,
-                BodyTypes.LeftEarring,
-                BodyTypes.LeftGarter,
-                BodyTypes.LowerBody,
-                BodyTypes.Necklace,
-                BodyTypes.NoseRing,
-                BodyTypes.RightEarring,
-                BodyTypes.RightGarter,
-                BodyTypes.Ring,
-                BodyTypes.Shoes,
-                BodyTypes.Socks,
-                BodyTypes.UpperBody
-            };
+        static Dictionary<string, OutfitAssignment> sIndexedOutfitAssignments;
 
-        [PersistableStatic(true)]
+        public static Dictionary<string, AssignedOutfit> AssignedOutfits
+        {
+            get
+            {
+                return (Dictionary<string, AssignedOutfit>)typeof(OutfitAssignmentUtils).GetField("GlobalOutfits", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static).GetValue(null);
+            }
+        }
+
+        [Obsolete("Use AssignedOutfits instead", true), PersistableStatic(true)]
         public static Dictionary<string, AssignedOutfit> GlobalOutfits = new Dictionary<string, AssignedOutfit>();
 
-        [PersistableStatic(true)]
-        public static List<string> GlobalOutfitsIncludingHair = new List<string>();
+        public static Dictionary<string, OutfitAssignment> IndexedOutfitAssignments
+        {
+            get
+            {
+                if (sIndexedOutfitAssignments == null)
+                {
+                    sIndexedOutfitAssignments = new Dictionary<string, OutfitAssignment>();
+                    foreach (OutfitAssignment outfitAssignment in OutfitAssignments)
+                    {
+                        sIndexedOutfitAssignments[outfitAssignment.InteractionInstanceType + (outfitAssignment.SimDescription == null ? "" : ("_" + outfitAssignment.SimDescription.SimDescriptionId))] = outfitAssignment;
+                    }
+                }
+                return sIndexedOutfitAssignments;
+            }
+        }
 
         public const string OutfitAssignmentCategoryPrefix = "OutfitAssignment_Category_";
 
         [PersistableStatic(true)]
         public static List<OutfitAssignment> OutfitAssignments = new List<OutfitAssignment>();
+
+        public static readonly BodyTypes[] OverridableBodyTypes;
 
         [PersistableStatic(true)]
         public static List<Outfit> PreviousOutfits = new List<Outfit>();
@@ -53,7 +56,7 @@ namespace Destrospean.OutfitAssignment
         [Persistable]
         public class AssignedOutfit
         {
-            public List<BodyTypes> PartOverrides = new List<BodyTypes>(ClothingTypes);
+            public List<BodyTypes> PartOverrides = new List<BodyTypes>(OverridableBodyTypes);
 
             public List<SavedPart> Parts;
 
@@ -91,6 +94,21 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
+        public class BodyTypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>
+        {
+            readonly string mLocalizationPath;
+
+            public BodyTypeColumn(string localizationPath) : base(localizationPath + "/Headers/PartType:Text", localizationPath + "/Headers/PartType:Tooltip", 400)
+            {
+                mLocalizationPath = localizationPath;
+            }
+
+            public override ObjectPicker.ColumnInfo GetValue(BodyTypes bodyType)
+            {
+                return new ObjectPicker.TextColumn(Responder.Instance.LocalizationModel.LocalizeString(mLocalizationPath + "/Options/PartType:" + bodyType));
+            }
+        }
+
         [Persistable]
         public class Outfit
         {
@@ -124,23 +142,62 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public static bool AddGlobalAssignedOutfit(this Sim sim, string globalAssignedSpecialOutfitKey, string simSpecialOutfitKey = null)
+        public class PartOverrideEnabledColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>
         {
-            SimOutfit baseOutfit = sim.SimDescription.GetOutfit(OutfitCategories.Everyday, 0);
-            AssignedOutfit globalAssignedOutfit;
-            if (!GlobalOutfits.TryGetValue(globalAssignedSpecialOutfitKey, out globalAssignedOutfit))
+            readonly string mLocalizationPath;
+
+            readonly List<BodyTypes> mPartOverrides;
+
+            public PartOverrideEnabledColumn(string localizationPath, BodyTypes[] partOverrides) : base(localizationPath + "/Headers/Enabled:Text", localizationPath + "/Headers/Enabled:Tooltip", 40)
+            {
+                mLocalizationPath = localizationPath;
+                mPartOverrides = new List<BodyTypes>(partOverrides);
+            }
+
+            public override ObjectPicker.ColumnInfo GetValue(BodyTypes bodyType)
+            {
+                return new ObjectPicker.TextColumn(Responder.Instance.LocalizationModel.LocalizeString(mLocalizationPath + "/Options/Enabled:" + mPartOverrides.Contains(bodyType)));
+            }
+        }
+
+        static OutfitAssignmentUtils()
+        {
+            List<BodyTypes> bodyTypes = new List<BodyTypes>();
+            foreach (BodyTypes bodyType in Enum.GetValues(typeof(BodyTypes)))
+            {
+                if (bodyType < BodyTypes.PetBody && !bodyTypes.Contains(bodyType))
+                {
+                    switch (bodyType)
+                    {
+                        case BodyTypes.AgeWeathering:
+                        case BodyTypes.BirthMark:
+                        case BodyTypes.Dental:
+                        case BodyTypes.EyeColor:
+                        case BodyTypes.Face:
+                        case BodyTypes.Freckles:
+                        case BodyTypes.Moles:
+                        case BodyTypes.None:
+                        case BodyTypes.Scalp:
+                        case BodyTypes.Tattoo:
+                        case BodyTypes.TattooTemplate:
+                            continue;
+                    }
+                    bodyTypes.Add(bodyType);
+                }
+            }
+            OverridableBodyTypes = bodyTypes.ToArray();
+        }
+
+        public static bool AddAssignedOutfit(this Sim sim, string assignedSpecialOutfitKey, string simSpecialOutfitKey = null)
+        {
+            AssignedOutfit assignedOutfit;
+            if (!AssignedOutfits.TryGetValue(assignedSpecialOutfitKey, out assignedOutfit))
             {
                 return false;
             }
-            bool includeHair = GlobalOutfitsIncludingHair.Contains(globalAssignedSpecialOutfitKey);
-            simSpecialOutfitKey = simSpecialOutfitKey ?? globalAssignedSpecialOutfitKey;
+            simSpecialOutfitKey = simSpecialOutfitKey ?? assignedSpecialOutfitKey;
             if (sim.SimDescription.HasSpecialOutfit(simSpecialOutfitKey))
             {
-                SimOutfit simSpecialOutfit = sim.SimDescription.GetSpecialOutfit(simSpecialOutfitKey);
-                if (Array.TrueForAll(simSpecialOutfit.Parts, x => !Array.Exists(ClothingTypes, y => y == x.BodyType) || x.BodyType == BodyTypes.Hair && !includeHair || globalAssignedOutfit.Parts.Exists(y => x.Equals(y.Part) && y.Preset == simSpecialOutfit.GetPartPreset(x.Key))))
-                {
-                    return true;
-                }
                 sim.SimDescription.RemoveSpecialOutfit(simSpecialOutfitKey);
             }
             using (SimBuilder simBuilder = new SimBuilder
@@ -148,35 +205,37 @@ namespace Destrospean.OutfitAssignment
                     UseCompression = true
                 })
             {
-                simBuilder.PrepareForOutfit(baseOutfit);
-                foreach (AssignedOutfit.SavedPart savedPart in globalAssignedOutfit.Parts)
+                simBuilder.PrepareForOutfit(sim.CurrentOutfit);
+                foreach (BodyTypes bodyType in OverridableBodyTypes)
                 {
-                    if (Array.Exists(ClothingTypes, x => x == savedPart.Part.BodyType))
+                    if (!assignedOutfit.PartOverrides.Contains(bodyType))
                     {
-                        switch (savedPart.Part.BodyType)
+                        continue;
+                    }
+                    int savedPartIndex = assignedOutfit.Parts.FindIndex(x => x.Part.BodyType == bodyType);
+                    if (savedPartIndex == -1)
+                    {
+                        simBuilder.RemoveParts(bodyType);
+                        continue;
+                    }
+                    AssignedOutfit.SavedPart savedPart = assignedOutfit.Parts[savedPartIndex];
+                    switch (bodyType)
+                    {
+                        case BodyTypes.FullBody:
+                            simBuilder.RemoveParts(BodyTypes.LowerBody, BodyTypes.UpperBody);
+                            break;
+                        case BodyTypes.LowerBody:
+                        case BodyTypes.UpperBody:
+                            simBuilder.RemoveParts(BodyTypes.FullBody);
+                            break;
+                    }
+                    simBuilder.RemoveParts(bodyType);
+                    simBuilder.AddPart(savedPart.Part);
+                    if (!string.IsNullOrEmpty(savedPart.Preset))
+                    {
+                        if (CASUtils.ApplyPresetToPart(simBuilder, savedPart.Part, savedPart.Preset))
                         {
-                            case BodyTypes.FullBody:
-                                simBuilder.RemoveParts(BodyTypes.LowerBody, BodyTypes.UpperBody);
-                                break;
-                            case BodyTypes.Hair:
-                                if (!includeHair)
-                                {
-                                    continue;
-                                }
-                                break;
-                            case BodyTypes.LowerBody:
-                            case BodyTypes.UpperBody:
-                                simBuilder.RemoveParts(BodyTypes.FullBody);
-                                break;
-                        }
-                        simBuilder.RemoveParts(savedPart.Part.BodyType);
-                        simBuilder.AddPart(savedPart.Part);
-                        if (!string.IsNullOrEmpty(savedPart.Preset))
-                        {
-                            if (CASUtils.ApplyPresetToPart(simBuilder, savedPart.Part, savedPart.Preset))
-                            {
-                                simBuilder.SetPartPreset(savedPart.Part.Key, null, savedPart.Preset);
-                            }
+                            simBuilder.SetPartPreset(savedPart.Part.Key, null, savedPart.Preset);
                         }
                     }
                 }
@@ -188,6 +247,7 @@ namespace Destrospean.OutfitAssignment
         {
             UnassignOutfitToInteraction(simDescription, interactionInstanceType);
             OutfitAssignments.Add(new OutfitAssignment(simDescription, specialOutfitKey, interactionInstanceType, entryCallbackType, exitCallbackType));
+            sIndexedOutfitAssignments = null;
         }
 
         public static void CreateOutfitForCategoryIfNecessary(this SimDescription simDescription, OutfitCategories outfitCategory)
@@ -234,6 +294,54 @@ namespace Destrospean.OutfitAssignment
                     }
                 }
             }
+            sIndexedOutfitAssignments = null;
+        }
+
+        public static bool ShowPartOverridesDialog(AssignedOutfit assignedOutfit, out BodyTypes[] partOverrides, BodyTypes[] preSelectedPartOverrides = null)
+        {
+            try
+            {
+                preSelectedPartOverrides = preSelectedPartOverrides ?? assignedOutfit.PartOverrides.ToArray();
+                const string localizationPath = Common.kLocalizationPath + "/Dialogs/PartOverrideListDialog";
+                bool cancelled, confirmed;
+                List<BodyTypes> selectedPartOverrides = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(localizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                    {
+                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), new List<BodyTypes>(OverridableBodyTypes).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                    }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>>
+                    {
+                        new BodyTypeColumn(localizationPath),
+                        new PartOverrideEnabledColumn(localizationPath, preSelectedPartOverrides)
+                    }, 1, out confirmed, out cancelled, true);
+                if (cancelled)
+                {
+                    partOverrides = new BodyTypes[0];
+                    return false;
+                }
+                List<BodyTypes> partOverrideList = new List<BodyTypes>(preSelectedPartOverrides);
+                if (confirmed)
+                {
+                    partOverrides = partOverrideList.ToArray();
+                    return true;
+                }
+                if (partOverrideList != null && partOverrideList.Count > 0)
+                {
+                    if (partOverrideList.Contains(selectedPartOverrides[0]))
+                    {
+                        partOverrideList.Remove(selectedPartOverrides[0]);
+                    }
+                    else
+                    {
+                        partOverrideList.Add(selectedPartOverrides[0]);
+                    }
+                }
+                return ShowPartOverridesDialog(assignedOutfit, out partOverrides, partOverrideList.ToArray());
+            }
+            catch (Exception ex)
+            {
+                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                partOverrides = new BodyTypes[0];
+                return false;
+            }
         }
 
         public static void SwitchToAssignedOutfit(this Sim sim, OutfitAssignment outfitAssignment, bool spin = true)
@@ -257,7 +365,7 @@ namespace Destrospean.OutfitAssignment
             {
                 if (outfitAssignment.SimDescription == null)
                 {
-                    sim.AddGlobalAssignedOutfit(outfitAssignment.SpecialOutfitKey);
+                    sim.AddAssignedOutfit(outfitAssignment.SpecialOutfitKey);
                 }
                 outfitCategory = OutfitCategories.Special;
                 outfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
@@ -297,19 +405,12 @@ namespace Destrospean.OutfitAssignment
 
         public static bool TryGetOutfitAssignment(this SimDescription simDescription, Sims3.Gameplay.Interactions.InteractionInstance interactionInstance, out OutfitAssignment outfitAssignment)
         {
-            return TryGetOutfitAssignment(simDescription, interactionInstance.GetType(), out outfitAssignment);
+            return simDescription.TryGetOutfitAssignment(interactionInstance.GetType(), out outfitAssignment);
         }
 
         public static bool TryGetOutfitAssignment(this SimDescription simDescription, Type interactionInstanceType, out OutfitAssignment outfitAssignment)
         {
-            List<OutfitAssignment> results = OutfitAssignments.FindAll(x => x.SimDescription == simDescription && Array.Find(InteractionInstanceTypeUtils.InteractionInstanceTypes, y => y.FullName == x.InteractionInstanceType).IsAssignableFrom(interactionInstanceType));
-            if (results.Count == 0)
-            {
-                outfitAssignment = null;
-                return false;
-            }
-            outfitAssignment = results[0];
-            return true;
+            return IndexedOutfitAssignments.TryGetValue(interactionInstanceType.FullName + (simDescription == null ? "" : ("_" + simDescription.SimDescriptionId)), out outfitAssignment);
         }
 
         public static void UnassignOutfitToInteraction(this SimDescription simDescription, Type interactionInstanceType)
@@ -318,6 +419,7 @@ namespace Destrospean.OutfitAssignment
             if (TryGetOutfitAssignment(simDescription, interactionInstanceType, out outfitAssignment))
             {
                 OutfitAssignments.Remove(outfitAssignment);
+                sIndexedOutfitAssignments = null;
             }
         }
     }

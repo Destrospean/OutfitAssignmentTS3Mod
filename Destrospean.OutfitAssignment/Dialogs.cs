@@ -113,13 +113,13 @@ namespace Destrospean.OutfitAssignment
         {
             Button mOkayButton;
 
+            bool mOkayButtonAlwaysEnabled, mWasCancelled, mWasOkay;
+
             List<ObjectPicker.RowInfo> mResult;
 
             ObjectPicker mTable;
 
             Vector2 mTableOffset;
-
-            bool mWasOkay;
 
             public List<ObjectPicker.RowInfo> Result
             {
@@ -129,7 +129,7 @@ namespace Destrospean.OutfitAssignment
                 }
             }
 
-            public abstract class CommonHeaderInfo<T> : ObjectPicker.HeaderInfo where T : class
+            public abstract class CommonHeaderInfo<T> : ObjectPicker.HeaderInfo
             {
                 public virtual bool IsStub
                 {
@@ -150,8 +150,9 @@ namespace Destrospean.OutfitAssignment
                 public abstract ObjectPicker.ColumnInfo GetValue(T item);
             }
 
-            public ObjectPickerDialog(string title, List<ObjectPicker.TabInfo> tabs, List<ObjectPicker.HeaderInfo> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows) : base("UiObjectPicker", 1, true, PauseMode.PauseSimulator, null)
+            public ObjectPickerDialog(string title, List<ObjectPicker.TabInfo> tabs, List<ObjectPicker.HeaderInfo> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows, bool okayButtonAlwaysEnabled = false) : base("UiObjectPicker", 1, true, PauseMode.PauseSimulator, null)
             {
+                mOkayButtonAlwaysEnabled = okayButtonAlwaysEnabled;
                 if (mModalDialogWindow == null)
                 {
                     return;
@@ -167,10 +168,10 @@ namespace Destrospean.OutfitAssignment
                 mTable.Area = new Rect(new Vector2(mTable.Area.TopLeft.x, mTable.Area.TopLeft.y), new Vector2(mTable.Area.BottomRight.x + 200, mTable.Area.BottomRight.y));
                 mOkayButton = (Button)mModalDialogWindow.GetChildByID(99576785, false);
                 mOkayButton.TooltipText = Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/Global:Accept");
-                mOkayButton.Enabled = false;
+                mOkayButton.Enabled = mOkayButtonAlwaysEnabled;
                 mOkayButton.Click += OnOkayButtonClick;
                 OkayID = mOkayButton.ID;
-                SelectedID = mOkayButton.ID;
+                SelectedID = 1202000;
                 Button cancelButton = (Button)mModalDialogWindow.GetChildByID(99576786, false);
                 cancelButton.TooltipText = Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:Cancel");
                 cancelButton.Click += OnCloseButtonClick;
@@ -180,7 +181,6 @@ namespace Destrospean.OutfitAssignment
                 mTable.mTabs.TabSelect -= mTable.OnTabSelect;
                 mTable.mTabs.TabSelect += OnTabSelect;
                 mTable.ViewTypeToggle = true;
-                mTable.Selected = preSelectedRows;
                 ResizeWindow(true);
             }
 
@@ -199,7 +199,7 @@ namespace Destrospean.OutfitAssignment
             void OnSelectionChanged(List<ObjectPicker.RowInfo> selectedRows)
             {
                 Audio.StartSound("ui_tertiary_button");
-                mOkayButton.Enabled = mTable.ObjectTable.SelectedItem > -1 && mTable.ObjectTable.GetRow(mTable.ObjectTable.SelectedItem) != null;
+                mOkayButton.Enabled = mOkayButtonAlwaysEnabled || mTable.ObjectTable.SelectedItem > -1 && mTable.ObjectTable.GetRow(mTable.ObjectTable.SelectedItem) != null;
                 OnTableChanged();
             }
 
@@ -207,7 +207,7 @@ namespace Destrospean.OutfitAssignment
             {
                 if (mTable.ObjectTable.SelectedItem > -1 && mTable.ObjectTable.GetRow(mTable.ObjectTable.SelectedItem) != null && mTable.mTable.NumSelectableRows == 1)
                 {
-                    EndDialog(OkayID);
+                    EndDialog(mOkayButtonAlwaysEnabled ? SelectedID : OkayID);
                 }
             }
 
@@ -275,23 +275,31 @@ namespace Destrospean.OutfitAssignment
                     }
                     mResult = mTable.Selected;
                     mWasOkay = true;
+                    mWasCancelled = false;
+                }
+                else if (endID == SelectedID)
+                {
+                    mResult = mTable.Selected;
+                    mWasOkay = false;
+                    mWasCancelled = false;
                 }
                 else
                 {
                     mResult = null;
                     mWasOkay = false;
+                    mWasCancelled = true;
                 }
                 mTable.Populate(null, null, 0);
                 return true;
             }
 
-            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<CommonHeaderInfo<T>> headers, int selectableRowCount, out bool confirmed) where T : class
+            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<CommonHeaderInfo<T>> headers, int selectableRowCount, out bool confirmed, out bool cancelled, bool okayButtonAlwaysEnabled = false)
             {
                 List<ObjectPicker.RowInfo> preSelectedRows = null;
-                return Show(title, tabs, headers, selectableRowCount, preSelectedRows, out confirmed);
+                return Show(title, tabs, headers, selectableRowCount, preSelectedRows, out confirmed, out cancelled, okayButtonAlwaysEnabled);
             }
 
-            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<CommonHeaderInfo<T>> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows, out bool confirmed) where T : class
+            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<CommonHeaderInfo<T>> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows, out bool confirmed, out bool cancelled, bool okayButtonAlwaysEnabled = false)
             {
                 Simulator.Sleep(0);
                 List<List<ObjectPicker.ColumnInfo>> columnInfoLists = new List<List<ObjectPicker.ColumnInfo>>();
@@ -306,7 +314,7 @@ namespace Destrospean.OutfitAssignment
                         columnInfoLists.Add(rowInfo.ColumnInfo);
                         foreach (CommonHeaderInfo<T> headerInfo in headers)
                         {
-                            ObjectPicker.ColumnInfo columnInfo = headerInfo.GetValue(rowInfo.Item as T);
+                            ObjectPicker.ColumnInfo columnInfo = headerInfo.GetValue((T)rowInfo.Item);
                             if (columnInfo == null)
                             {
                                 if (headerInfo.IsStub)
@@ -319,15 +327,16 @@ namespace Destrospean.OutfitAssignment
                         }
                     }
                 }
-                return Show<T>(title, tabs, headers.ConvertAll(x => (ObjectPicker.HeaderInfo)x), selectableRowCount, preSelectedRows, out confirmed);
+                return Show<T>(title, tabs, headers.ConvertAll(x => (ObjectPicker.HeaderInfo)x), selectableRowCount, preSelectedRows, out confirmed, out cancelled, okayButtonAlwaysEnabled);
             }
 
-            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<ObjectPicker.HeaderInfo> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows, out bool confirmed) where T : class
+            public static List<T> Show<T>(string title, List<ObjectPicker.TabInfo> tabs, List<ObjectPicker.HeaderInfo> headers, int selectableRowCount, List<ObjectPicker.RowInfo> preSelectedRows, out bool confirmed, out bool cancelled, bool okayButtonAlwaysEnabled = false)
             {
-                using (ObjectPickerDialog objectPickerDialog = new ObjectPickerDialog(title, tabs, headers, selectableRowCount, preSelectedRows))
+                using (ObjectPickerDialog objectPickerDialog = new ObjectPickerDialog(title, tabs, headers, selectableRowCount, preSelectedRows, okayButtonAlwaysEnabled))
                 {
                     objectPickerDialog.StartModal();
                     confirmed = objectPickerDialog.mWasOkay;
+                    cancelled = objectPickerDialog.mWasCancelled;
                     if (objectPickerDialog.Result == null || objectPickerDialog.Result.Count == 0)
                     {
                         return null;
@@ -335,7 +344,7 @@ namespace Destrospean.OutfitAssignment
                     List<T> results = new List<T>();
                     foreach (ObjectPicker.RowInfo rowInfo in objectPickerDialog.Result)
                     {
-                        results.Add(rowInfo.Item as T);
+                        results.Add((T)rowInfo.Item);
                     }
                     return results;
                 }

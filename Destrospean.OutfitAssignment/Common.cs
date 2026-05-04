@@ -23,6 +23,11 @@ namespace Destrospean.OutfitAssignment
             InteractionObjectPair.sTuningCache.Remove(new Pair<Type, Type>(newType, baseType));
         }
 
+        public static SimDescription GetSimDescription(this Sims3.Gameplay.Actors.Sim sim)
+        {
+            return sim == null ? null : sim.SimDescription;
+        }
+
         public static string Localize(string entryKey)
         {
             return Localization.LocalizeString(kLocalizationPath + entryKey);

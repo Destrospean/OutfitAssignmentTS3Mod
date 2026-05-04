@@ -58,6 +58,7 @@
     <Compile Include="InteractionInstanceTypeUtils.cs" />
     <Compile Include="OutfitAssignmentUtils.cs" />
     <Compile Include="Tuning.cs" />
+    <Compile Include="Replacements.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib">

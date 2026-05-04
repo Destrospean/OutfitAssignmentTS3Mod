@@ -33,7 +33,7 @@ namespace Destrospean.OutfitAssignment
             OutfitChanged
         }
 
-        class TextColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>
+        public class TextColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>
         {
             public TextColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 40)
             {
@@ -45,7 +45,7 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        class TypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>
+        public class TypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>
         {
             public TypeColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 40)
             {
@@ -83,14 +83,14 @@ namespace Destrospean.OutfitAssignment
                         namespaces.Add(interactionInstanceType.Namespace);
                     }
                 }
-                bool confirmed;
+                bool cancelled, confirmed;
                 List<string> selectedNamespaces = Dialogs.ObjectPickerDialog.Show(namespaceListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(namespaceListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
                     {
                         new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), namespaces.ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
                     }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>>
                     {
                         new TextColumn(namespaceListDialogLocalizationPath)
-                    }, 1, out confirmed);
+                    }, 1, out confirmed, out cancelled);
                 if (!confirmed || selectedNamespaces == null || selectedNamespaces.Count == 0)
                 {
                     selectedInteractionInstanceTypes = null;
@@ -102,7 +102,7 @@ namespace Destrospean.OutfitAssignment
                     }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
                     {
                         new TypeColumn(interactionListDialogLocalizationPath)
-                    }, int.MaxValue, out confirmed) ?? new List<Type>()).ToArray();
+                    }, int.MaxValue, out confirmed, out cancelled) ?? new List<Type>()).ToArray();
                 if (!confirmed || selectedInteractionInstanceTypes.Length == 0)
                 {
                     return TryGetSelectedInteractionInstanceTypes(out selectedInteractionInstanceTypes, allInteractionInstanceTypes, namespaceListTitle, interactionListTitle);
