@@ -1,5 +1,4 @@
 ﻿using Sims3.Gameplay.Actors;
-using Sims3.Gameplay.ActorSystems;
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
 using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
@@ -112,7 +111,7 @@ namespace Destrospean.OutfitAssignment
                         }
                         if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted)
                         {
-                            interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment, !(interactionInstance.InstanceActor.Posture is SittingPosture));
+                            interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                         }
                     }
                 };
@@ -121,7 +120,7 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
                     {
-                        interactionInstance.InstanceActor.SwitchToPreviousOutfit(!(interactionInstance.InstanceActor.Posture is SittingPosture));
+                        interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                     }
                 };
             InteractionInstanceAdditions.OnWaitForSynchronizationLevel += (interactionInstance, syncLevel) =>
@@ -134,19 +133,19 @@ namespace Destrospean.OutfitAssignment
                             case Sim.SyncLevel.Committed:
                                 if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCommitted)
                                 {
-                                    interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment, !(interactionInstance.InstanceActor.Posture is SittingPosture));
+                                    interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                                 }
                                 break;
                             case Sim.SyncLevel.Completed:
                                 if (outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCompleted)
                                 {
-                                    interactionInstance.InstanceActor.SwitchToPreviousOutfit(!(interactionInstance.InstanceActor.Posture is SittingPosture));
+                                    interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                                 }
                                 break;
                             case Sim.SyncLevel.Routed:
                                 if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelRouted)
                                 {
-                                    interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment, !(interactionInstance.InstanceActor.Posture is SittingPosture));
+                                    interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                                 }
                                 break;
                         }
@@ -157,7 +156,7 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)) && (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged || outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardEntry))
                     {
-                        interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment, !(interactionInstance.InstanceActor.Posture is SittingPosture));
+                        interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                     }
                 };
             InteractionInstanceAdditions.StandardExitPostCallCallback += (interactionInstance) =>
@@ -165,7 +164,7 @@ namespace Destrospean.OutfitAssignment
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardExit)
                     {
-                        interactionInstance.InstanceActor.SwitchToPreviousOutfit(!(interactionInstance.InstanceActor.Posture is SittingPosture));
+                        interactionInstance.InstanceActor.SwitchToPreviousOutfit();
                     }
                 };
         }

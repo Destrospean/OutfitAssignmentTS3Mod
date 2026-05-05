@@ -265,7 +265,7 @@ namespace Destrospean.OutfitAssignment
                     }
                     else
                     {
-                        OutfitUtils.CreateOutfitForSim(simDescription, ResourceKey.CreateOutfitKeyFromProductVersion((simDescription.IsMale ? "m" : "f") + OutfitUtils.GetAgePrefix(simDescription.Age, true) + "_towel", ProductVersion.EP3), OutfitCategories.SkinnyDippingTowel, OutfitCategories.Swimwear, true);
+                        OutfitUtils.CreateOutfitForSim(simDescription, ResourceKey.CreateOutfitKeyFromProductVersion(OutfitUtils.GetGenderPrefix(simDescription.Gender) + OutfitUtils.GetAgePrefix(simDescription.Age, true) + "_towel", ProductVersion.EP3), OutfitCategories.SkinnyDippingTowel, OutfitCategories.Swimwear, true);
                     }
                     break;
             }
@@ -373,7 +373,7 @@ namespace Destrospean.OutfitAssignment
                 outfitIndex = sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey));
             }
             sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
-            if (spin)
+            if (spin && !(sim.Posture is SittingPosture))
             {
                 sim.SwitchToOutfitWithSpin(outfitCategory, outfitIndex);
             }
