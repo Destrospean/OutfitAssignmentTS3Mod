@@ -31,11 +31,7 @@ namespace Destrospean.OutfitAssignment
             {
                 if (sIndexedOutfitAssignments == null)
                 {
-                    sIndexedOutfitAssignments = new Dictionary<string, OutfitAssignment>();
-                    foreach (OutfitAssignment outfitAssignment in OutfitAssignments)
-                    {
-                        sIndexedOutfitAssignments[outfitAssignment.InteractionInstanceType + (outfitAssignment.SimDescription == null ? "" : ("_" + outfitAssignment.SimDescription.SimDescriptionId))] = outfitAssignment;
-                    }
+                    IndexOutfitAssignments();
                 }
                 return sIndexedOutfitAssignments;
             }
@@ -247,7 +243,7 @@ namespace Destrospean.OutfitAssignment
         {
             UnassignOutfitToInteraction(simDescription, interactionInstanceType);
             OutfitAssignments.Add(new OutfitAssignment(simDescription, specialOutfitKey, interactionInstanceType, entryCallbackType, exitCallbackType));
-            sIndexedOutfitAssignments = null;
+            IndexOutfitAssignments();
         }
 
         public static void CreateOutfitForCategoryIfNecessary(this SimDescription simDescription, OutfitCategories outfitCategory)
@@ -281,6 +277,15 @@ namespace Destrospean.OutfitAssignment
             return "OutfitAssignment_Global_" + OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + "_";
         }
 
+        public static void IndexOutfitAssignments()
+        {
+            sIndexedOutfitAssignments = new Dictionary<string, OutfitAssignment>();
+            foreach (OutfitAssignment outfitAssignment in OutfitAssignments)
+            {
+                sIndexedOutfitAssignments[outfitAssignment.InteractionInstanceType + (outfitAssignment.SimDescription == null ? "" : ("_" + outfitAssignment.SimDescription.SimDescriptionId))] = outfitAssignment;
+            }
+        }
+
         public static void RemoveAllOutfitAssignments(this SimDescription simDescription, bool removeSpecialOutfits = false)
         {
             foreach (OutfitAssignment outfitAssignment in new List<OutfitAssignment>(OutfitAssignments))
@@ -298,7 +303,7 @@ namespace Destrospean.OutfitAssignment
                     }
                 }
             }
-            sIndexedOutfitAssignments = null;
+            IndexOutfitAssignments();
         }
 
         public static bool ShowPartOverridesDialog(AssignedOutfit assignedOutfit, out BodyTypes[] partOverrides, BodyTypes[] preSelectedPartOverrides = null)
@@ -421,7 +426,7 @@ namespace Destrospean.OutfitAssignment
             if (TryGetOutfitAssignment(simDescription, interactionInstanceType, out outfitAssignment))
             {
                 OutfitAssignments.Remove(outfitAssignment);
-                sIndexedOutfitAssignments = null;
+                IndexOutfitAssignments();
             }
         }
     }
