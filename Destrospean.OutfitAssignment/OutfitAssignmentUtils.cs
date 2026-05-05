@@ -37,7 +37,8 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public const string OutfitAssignmentCategoryPrefix = "OutfitAssignment_Category_";
+        public const string OutfitAssignmentCategoryPrefix = "OutfitAssignment_Category_",
+        OutfitAssignmentGlobalPrefix = "OutfitAssignment_Global_";
 
         [PersistableStatic(true)]
         public static List<OutfitAssignment> OutfitAssignments = new List<OutfitAssignment>();
@@ -46,6 +47,8 @@ namespace Destrospean.OutfitAssignment
 
         [PersistableStatic(true)]
         public static List<Outfit> PreviousOutfits = new List<Outfit>();
+
+        public delegate bool SimFilterFunc(SimDescription simDescription);
 
         public static List<SimDescription> TimeToChangeBackList = new List<SimDescription>();
 
@@ -156,6 +159,18 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
+        public class SimColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<SimDescription>
+        {
+            public SimColumn(string localizationPath) : base(localizationPath + "/Headers/Sim:Text", localizationPath + "/Headers/Sim:Tooltip", 440)
+            {
+            }
+
+            public override ObjectPicker.ColumnInfo GetValue(SimDescription simDescription)
+            {
+                return new ObjectPicker.ThumbAndTextColumn(simDescription.GetEverydayThumbnail(ThumbnailSize.ExtraLarge), simDescription.FullName);
+            }
+        }
+
         static OutfitAssignmentUtils()
         {
             List<BodyTypes> overridableBodyTypes = new List<BodyTypes>();
@@ -184,24 +199,18 @@ namespace Destrospean.OutfitAssignment
             OverridableBodyTypes = overridableBodyTypes.ToArray();
         }
 
-        public static bool AddAssignedOutfit(this Sim sim, string assignedSpecialOutfitKey, string simSpecialOutfitKey = null)
+        public static bool AddAssignedOutfit(this SimDescription simDescription, AssignedOutfit assignedOutfit, string specialOutfitKey)
         {
-            AssignedOutfit assignedOutfit;
-            if (!AssignedOutfits.TryGetValue(assignedSpecialOutfitKey, out assignedOutfit))
+            if (simDescription.HasSpecialOutfit(specialOutfitKey))
             {
-                return false;
-            }
-            simSpecialOutfitKey = simSpecialOutfitKey ?? assignedSpecialOutfitKey;
-            if (sim.SimDescription.HasSpecialOutfit(simSpecialOutfitKey))
-            {
-                sim.SimDescription.RemoveSpecialOutfit(simSpecialOutfitKey);
+                simDescription.RemoveSpecialOutfit(specialOutfitKey);
             }
             using (SimBuilder simBuilder = new SimBuilder
                 {
                     UseCompression = true
                 })
             {
-                simBuilder.PrepareForOutfit(sim.CurrentOutfit);
+                simBuilder.PrepareForOutfit(simDescription.CreatedSim == null ? simDescription.GetOutfit(OutfitCategories.Everyday, 0) : simDescription.CreatedSim.CurrentOutfit);
                 foreach (BodyTypes bodyType in OverridableBodyTypes)
                 {
                     if (!assignedOutfit.PartOverrides.Contains(bodyType))
@@ -235,8 +244,14 @@ namespace Destrospean.OutfitAssignment
                         }
                     }
                 }
-                return sim.SimDescription.AddSpecialOutfit(new SimOutfit(simBuilder.CacheOutfit(simSpecialOutfitKey + "_" + sim.SimDescription.SimDescriptionId)), simSpecialOutfitKey) > -1;
+                return simDescription.AddSpecialOutfit(new SimOutfit(simBuilder.CacheOutfit(specialOutfitKey + "_" + simDescription.SimDescriptionId)), specialOutfitKey) > -1;
             }
+        }
+
+        public static bool AddAssignedOutfit(this Sim sim, string assignedSpecialOutfitKey, string simSpecialOutfitKey = null)
+        {
+            AssignedOutfit assignedOutfit;
+            return AssignedOutfits.TryGetValue(assignedSpecialOutfitKey, out assignedOutfit) && sim.SimDescription.AddAssignedOutfit(assignedOutfit, simSpecialOutfitKey ?? assignedSpecialOutfitKey);
         }
 
         public static void AssignOutfitToInteraction(this SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceTypeUtils.CallbackTypes entryCallbackType, InteractionInstanceTypeUtils.CallbackTypes exitCallbackType)
@@ -274,7 +289,7 @@ namespace Destrospean.OutfitAssignment
 
         public static string GetGlobalAssignedOutfitPrefix(this Sim sim)
         {
-            return "OutfitAssignment_Global_" + OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + "_";
+            return OutfitAssignmentGlobalPrefix + OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + "_";
         }
 
         public static void IndexOutfitAssignments()
@@ -282,7 +297,7 @@ namespace Destrospean.OutfitAssignment
             sIndexedOutfitAssignments = new Dictionary<string, OutfitAssignment>();
             foreach (OutfitAssignment outfitAssignment in OutfitAssignments)
             {
-                sIndexedOutfitAssignments[outfitAssignment.InteractionInstanceType + (outfitAssignment.SimDescription == null ? "" : ("_" + outfitAssignment.SimDescription.SimDescriptionId))] = outfitAssignment;
+                sIndexedOutfitAssignments[(outfitAssignment.SimDescription == null ? outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentGlobalPrefix.Length, 2) + "_" : "") + outfitAssignment.InteractionInstanceType + (outfitAssignment.SimDescription == null ? "" : ("_" + outfitAssignment.SimDescription.SimDescriptionId))] = outfitAssignment;
             }
         }
 
@@ -306,7 +321,7 @@ namespace Destrospean.OutfitAssignment
             IndexOutfitAssignments();
         }
 
-        public static bool ShowPartOverridesDialog(AssignedOutfit assignedOutfit, out BodyTypes[] partOverrides, BodyTypes[] preSelectedPartOverrides = null)
+        public static bool ShowPartOverrideListDialog(AssignedOutfit assignedOutfit, out BodyTypes[] partOverrides, BodyTypes[] preSelectedPartOverrides = null)
         {
             try
             {
@@ -347,6 +362,35 @@ namespace Destrospean.OutfitAssignment
             {
                 ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                 partOverrides = null;
+                return false;
+            }
+        }
+
+        public static bool ShowSimListDialog(out SimDescription[] selectedSims, SimFilterFunc simFilter = null)
+        {
+            try
+            {
+                const string localizationPath = Common.kLocalizationPath + "/Dialogs/SimListDialog";
+                bool cancelled, confirmed;
+                List<SimDescription> selectedSimList = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(localizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                    {
+                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), Household.EverySimDescription().FindAll(x => simFilter == null ? true : simFilter(x)).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                    }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<SimDescription>>
+                    {
+                        new SimColumn(localizationPath),
+                    }, int.MaxValue, out confirmed, out cancelled);
+                if (confirmed)
+                {
+                    selectedSims = selectedSimList.ToArray();
+                    return true;
+                }
+                selectedSims = null;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                selectedSims = null;
                 return false;
             }
         }
@@ -410,20 +454,30 @@ namespace Destrospean.OutfitAssignment
             TimeToChangeBackList.RemoveAll(x => x == sim.SimDescription);
         }
 
-        public static bool TryGetOutfitAssignment(this SimDescription simDescription, Sims3.Gameplay.Interactions.InteractionInstance interactionInstance, out OutfitAssignment outfitAssignment)
+        public static bool TryGetGlobalOutfitAssignment(this SimDescription simDescription, Sims3.Gameplay.Interactions.InteractionInstance interactionInstance, out OutfitAssignment outfitAssignment)
         {
-            return simDescription.TryGetOutfitAssignment(interactionInstance.GetType(), out outfitAssignment);
+            return simDescription.TryGetGlobalOutfitAssignment(interactionInstance.GetType(), out outfitAssignment);
         }
 
-        public static bool TryGetOutfitAssignment(this SimDescription simDescription, Type interactionInstanceType, out OutfitAssignment outfitAssignment)
+        public static bool TryGetGlobalOutfitAssignment(this SimDescription simDescription, Type interactionInstanceType, out OutfitAssignment outfitAssignment)
         {
-            return IndexedOutfitAssignments.TryGetValue(interactionInstanceType.FullName + (simDescription == null ? "" : ("_" + simDescription.SimDescriptionId)), out outfitAssignment);
+            return IndexedOutfitAssignments.TryGetValue(OutfitUtils.GetAgePrefix(simDescription.Age, true) + OutfitUtils.GetGenderPrefix(simDescription.Gender) + "_" + interactionInstanceType.FullName, out outfitAssignment);
+        }
+
+        public static bool TryGetOutfitAssignment(this SimDescription simDescription, Sims3.Gameplay.Interactions.InteractionInstance interactionInstance, out OutfitAssignment outfitAssignment, SimDescription fallbackSimDescription = null)
+        {
+            return simDescription.TryGetOutfitAssignment(interactionInstance.GetType(), out outfitAssignment, fallbackSimDescription);
+        }
+
+        public static bool TryGetOutfitAssignment(this SimDescription simDescription, Type interactionInstanceType, out OutfitAssignment outfitAssignment, SimDescription fallbackSimDescription = null)
+        {
+            return simDescription == null ? fallbackSimDescription.TryGetGlobalOutfitAssignment(interactionInstanceType, out outfitAssignment) : IndexedOutfitAssignments.TryGetValue(interactionInstanceType.FullName + "_" + simDescription.SimDescriptionId, out outfitAssignment);
         }
 
         public static void UnassignOutfitToInteraction(this SimDescription simDescription, Type interactionInstanceType)
         {
             OutfitAssignment outfitAssignment;
-            if (TryGetOutfitAssignment(simDescription, interactionInstanceType, out outfitAssignment))
+            if (simDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) || simDescription.TryGetGlobalOutfitAssignment(interactionInstanceType, out outfitAssignment))
             {
                 OutfitAssignments.Remove(outfitAssignment);
                 IndexOutfitAssignments();

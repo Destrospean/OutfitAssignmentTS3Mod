@@ -85,7 +85,7 @@ namespace Destrospean.OutfitAssignment
             OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
             if (!OutfitAssignmentUtils.TimeToChangeBackList.Contains(sim.SimDescription))
             {
-                if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) || OutfitAssignmentUtils.TryGetOutfitAssignment(null, sim.CurrentInteraction, out outfitAssignment))
+                if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) || sim.SimDescription.TryGetGlobalOutfitAssignment(sim.CurrentInteraction, out outfitAssignment))
                 {
                     if (OutfitAssignmentUtils.AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
                     {

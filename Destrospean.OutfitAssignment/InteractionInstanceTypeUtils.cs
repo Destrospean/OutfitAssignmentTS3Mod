@@ -35,7 +35,7 @@ namespace Destrospean.OutfitAssignment
 
         public class TextColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>
         {
-            public TextColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 40)
+            public TextColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 440)
             {
             }
 
@@ -47,7 +47,7 @@ namespace Destrospean.OutfitAssignment
 
         public class TypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>
         {
-            public TypeColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 40)
+            public TypeColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 440)
             {
             }
 
