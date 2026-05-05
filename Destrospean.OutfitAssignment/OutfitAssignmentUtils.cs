@@ -288,6 +288,10 @@ namespace Destrospean.OutfitAssignment
                 if (outfitAssignment.SimDescription == simDescription)
                 {
                     OutfitAssignments.Remove(outfitAssignment);
+                    if (AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
+                    {
+                        AssignedOutfits.Remove(outfitAssignment.SpecialOutfitKey);
+                    }
                     if (removeSpecialOutfits && simDescription.HasSpecialOutfit(outfitAssignment.SpecialOutfitKey))
                     {
                         simDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
