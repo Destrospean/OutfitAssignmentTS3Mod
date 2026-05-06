@@ -1,4 +1,5 @@
-﻿using Sims3.Gameplay.Actors;
+﻿using Destrospean.OutfitAssignment.Interactions;
+using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
 using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
@@ -173,18 +174,18 @@ namespace Destrospean.OutfitAssignment
         {
             if (gameObject != null)
             {
-                gameObject.AddInteraction(Interactions.AssignOutfitCategoryToInteraction.Singleton, true);
-                gameObject.AddInteraction(Interactions.AssignOutfitToInteraction.Singleton, true);
-                gameObject.AddInteraction(Interactions.ConfigureOutfitAssignment.Singleton, true);
-                gameObject.AddInteraction(Interactions.CopyAssignedOutfitToInteraction.Singleton, true);
-                gameObject.AddInteraction(Interactions.EditAssignedOutfit.Singleton, true);
-                gameObject.AddInteraction(Interactions.ExtendAssignedOutfitToInteraction.Singleton, true);
-                gameObject.AddInteraction(Interactions.UnassignOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(AssignOutfitCategoryToInteraction.Singleton, true);
+                gameObject.AddInteraction(AssignOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(ConfigureOutfitAssignment.Singleton, true);
+                gameObject.AddInteraction(CopyAssignedOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(EditAssignedOutfit.Singleton, true);
+                gameObject.AddInteraction(ExtendAssignedOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(UnassignOutfitToInteraction.Singleton, true);
             }
             if (gameObject is Sim)
             {
-                gameObject.AddInteraction(Interactions.AssignOutfitToInteraction.PartialOutfitSingleton, true);
-                gameObject.AddInteraction(Interactions.CopyOutfitAssignmentToSim.Singleton, true);
+                gameObject.AddInteraction(AssignOutfitToInteraction.PartialOutfitSingleton, true);
+                gameObject.AddInteraction(CopyOutfitAssignmentToSim.Singleton, true);
             }
         }
     }
