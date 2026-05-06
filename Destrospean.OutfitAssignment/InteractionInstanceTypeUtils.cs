@@ -33,30 +33,6 @@ namespace Destrospean.OutfitAssignment
             OutfitChanged
         }
 
-        public class TextColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>
-        {
-            public TextColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 440)
-            {
-            }
-
-            public override ObjectPicker.ColumnInfo GetValue(string text)
-            {
-                return new ObjectPicker.TextColumn(text ?? "");
-            }
-        }
-
-        public class TypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>
-        {
-            public TypeColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 440)
-            {
-            }
-
-            public override ObjectPicker.ColumnInfo GetValue(Type type)
-            {
-                return new ObjectPicker.TextColumn(type == null ? "" : type.FullName);
-            }
-        }
-
         public static void InitInteractionInstanceTypes()
         {
             List<Type> interactionInstanceTypes = new List<Type>();
@@ -86,24 +62,24 @@ namespace Destrospean.OutfitAssignment
                 bool cancelled, confirmed;
                 while (true)
                 {
-                    List<string> selectedNamespaces = Dialogs.ObjectPickerDialog.Show(namespaceListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(namespaceListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                    List<string> selectedNamespaces = UI.Dialogs.ObjectPickerDialog.Show(namespaceListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(namespaceListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
                         {
                             new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), namespaces.ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
-                        }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>>
+                        }, new List<UI.Dialogs.ObjectPickerDialog.CommonHeaderInfo<string>>
                         {
-                            new TextColumn(namespaceListDialogLocalizationPath)
+                            new UI.Columns.TextColumn(namespaceListDialogLocalizationPath)
                         }, 1, out confirmed, out cancelled);
                     if (cancelled)
                     {
                         selectedInteractionInstanceTypes = null;
                         return false;
                     }
-                    selectedInteractionInstanceTypes = (Dialogs.ObjectPickerDialog.Show(interactionListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(interactionListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                    selectedInteractionInstanceTypes = (UI.Dialogs.ObjectPickerDialog.Show(interactionListTitle ?? Responder.Instance.LocalizationModel.LocalizeString(interactionListDialogLocalizationPath + ":Title"), new List<ObjectPicker.TabInfo>
                         {
                             new ObjectPicker.TabInfo("shop_all_r2", selectedNamespaces[0], new List<Type>(allInteractionInstanceTypes).FindAll(x => x.Namespace == selectedNamespaces[0]).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
-                        }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
+                        }, new List<UI.Dialogs.ObjectPickerDialog.CommonHeaderInfo<Type>>
                         {
-                            new TypeColumn(interactionListDialogLocalizationPath)
+                            new UI.Columns.TypeColumn(interactionListDialogLocalizationPath)
                         }, int.MaxValue, out confirmed, out cancelled) ?? new List<Type>()).ToArray();
                     if (confirmed)
                     {

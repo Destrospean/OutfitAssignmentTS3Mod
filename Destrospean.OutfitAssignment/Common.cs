@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Sims3.Gameplay.Autonomy;
 using Sims3.Gameplay.CAS;
 using Sims3.Gameplay.Utilities;
@@ -9,6 +10,20 @@ namespace Destrospean.OutfitAssignment
     public static class Common
     {
         internal const string kLocalizationPath = "Destrospean/OutfitAssignment";
+
+        public delegate bool SimDescriptionFilterFunc(SimDescription simDescription);
+
+        public class SimColumn : UI.Dialogs.ObjectPickerDialog.CommonHeaderInfo<SimDescription>
+        {
+            public SimColumn(string localizationPath) : base(localizationPath + "/Header:Text", localizationPath + "/Header:Tooltip", 440)
+            {
+            }
+
+            public override ObjectPicker.ColumnInfo GetValue(SimDescription simDescription)
+            {
+                return new ObjectPicker.ThumbAndTextColumn(simDescription.GetEverydayThumbnail(Sims3.SimIFace.ThumbnailSize.ExtraLarge), simDescription.FullName);
+            }
+        }
 
         public static void CopyTuning(Type baseType, Type oldType, Type newType)
         {
@@ -72,6 +87,35 @@ namespace Destrospean.OutfitAssignment
             else
             {
                 StyledNotification.Show(new StyledNotification.Format(message, style));
+            }
+        }
+
+        public static bool ShowSimListDialog(out SimDescription[] selectedSims, SimDescriptionFilterFunc filterBy = null)
+        {
+            try
+            {
+                const string localizationPath = kLocalizationPath + "/Dialogs/SimListDialog";
+                bool cancelled, confirmed;
+                List<SimDescription> selectedSimList = UI.Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(localizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                    {
+                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), Household.EverySimDescription().FindAll(x => filterBy == null ? true : filterBy(x)).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
+                    }, new List<UI.Dialogs.ObjectPickerDialog.CommonHeaderInfo<SimDescription>>
+                    {
+                        new SimColumn(localizationPath),
+                    }, int.MaxValue, out confirmed, out cancelled);
+                if (confirmed)
+                {
+                    selectedSims = selectedSimList.ToArray();
+                    return true;
+                }
+                selectedSims = null;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ((Sims3.SimIFace.IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                selectedSims = null;
+                return false;
             }
         }
     }

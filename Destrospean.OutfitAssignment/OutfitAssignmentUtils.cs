@@ -22,7 +22,7 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        [Obsolete("Use AssignedOutfits instead", true), PersistableStatic(true)]
+        [Obsolete("Use `AssignedOutfits` instead", true), PersistableStatic(true)]
         public static Dictionary<string, AssignedOutfit> GlobalOutfits = new Dictionary<string, AssignedOutfit>();
 
         public static Dictionary<string, OutfitAssignment> IndexedOutfitAssignments
@@ -47,8 +47,6 @@ namespace Destrospean.OutfitAssignment
 
         [PersistableStatic(true)]
         public static List<Outfit> PreviousOutfits = new List<Outfit>();
-
-        public delegate bool SimFilterFunc(SimDescription simDescription);
 
         public static List<SimDescription> TimeToChangeBackList = new List<SimDescription>();
 
@@ -93,21 +91,6 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public class BodyTypeColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>
-        {
-            readonly string mLocalizationPath;
-
-            public BodyTypeColumn(string localizationPath) : base(localizationPath + "/Headers/PartType:Text", localizationPath + "/Headers/PartType:Tooltip", 400)
-            {
-                mLocalizationPath = localizationPath;
-            }
-
-            public override ObjectPicker.ColumnInfo GetValue(BodyTypes bodyType)
-            {
-                return new ObjectPicker.TextColumn(Responder.Instance.LocalizationModel.LocalizeString(mLocalizationPath + "/Options/PartType:" + bodyType));
-            }
-        }
-
         [Persistable]
         public class Outfit
         {
@@ -138,36 +121,6 @@ namespace Destrospean.OutfitAssignment
                 InteractionInstanceType = interactionInstanceType.FullName;
                 SimDescription = simDescription;
                 SpecialOutfitKey = specialOutfitKey;
-            }
-        }
-
-        public class PartOverrideEnabledColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>
-        {
-            readonly string mLocalizationPath;
-
-            readonly List<BodyTypes> mPartOverrides;
-
-            public PartOverrideEnabledColumn(string localizationPath, BodyTypes[] partOverrides) : base(localizationPath + "/Headers/Enabled:Text", localizationPath + "/Headers/Enabled:Tooltip", 40)
-            {
-                mLocalizationPath = localizationPath;
-                mPartOverrides = new List<BodyTypes>(partOverrides);
-            }
-
-            public override ObjectPicker.ColumnInfo GetValue(BodyTypes bodyType)
-            {
-                return new ObjectPicker.TextColumn(Responder.Instance.LocalizationModel.LocalizeString(mLocalizationPath + "/Options/Enabled:" + mPartOverrides.Contains(bodyType)));
-            }
-        }
-
-        public class SimColumn : Dialogs.ObjectPickerDialog.CommonHeaderInfo<SimDescription>
-        {
-            public SimColumn(string localizationPath) : base(localizationPath + "/Headers/Sim:Text", localizationPath + "/Headers/Sim:Tooltip", 440)
-            {
-            }
-
-            public override ObjectPicker.ColumnInfo GetValue(SimDescription simDescription)
-            {
-                return new ObjectPicker.ThumbAndTextColumn(simDescription.GetEverydayThumbnail(ThumbnailSize.ExtraLarge), simDescription.FullName);
             }
         }
 
@@ -330,13 +283,13 @@ namespace Destrospean.OutfitAssignment
                 bool cancelled, confirmed;
                 while (true)
                 {
-                    List<BodyTypes> selectedPartOverrides = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(localizationPath + ":Title"), new List<ObjectPicker.TabInfo>
+                    List<BodyTypes> selectedPartOverrides = UI.Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(localizationPath + ":Title"), new List<ObjectPicker.TabInfo>
                         {
                             new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), new List<BodyTypes>(OverridableBodyTypes).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
-                        }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>>
+                        }, new List<UI.Dialogs.ObjectPickerDialog.CommonHeaderInfo<BodyTypes>>
                         {
-                            new BodyTypeColumn(localizationPath),
-                            new PartOverrideEnabledColumn(localizationPath, partOverrideList.ToArray())
+                            new UI.Columns.BodyTypeColumn(localizationPath),
+                            new UI.Columns.PartOverrideEnabledColumn(localizationPath, partOverrideList.ToArray())
                         }, 1, out confirmed, out cancelled, true);
                     if (cancelled)
                     {
@@ -362,35 +315,6 @@ namespace Destrospean.OutfitAssignment
             {
                 ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                 partOverrides = null;
-                return false;
-            }
-        }
-
-        public static bool ShowSimListDialog(out SimDescription[] selectedSims, SimFilterFunc simFilter = null)
-        {
-            try
-            {
-                const string localizationPath = Common.kLocalizationPath + "/Dialogs/SimListDialog";
-                bool cancelled, confirmed;
-                List<SimDescription> selectedSimList = Dialogs.ObjectPickerDialog.Show(Responder.Instance.LocalizationModel.LocalizeString(localizationPath + ":Title"), new List<ObjectPicker.TabInfo>
-                    {
-                        new ObjectPicker.TabInfo("shop_all_r2", Responder.Instance.LocalizationModel.LocalizeString("Ui/Caption/ObjectPicker:All"), Household.EverySimDescription().FindAll(x => simFilter == null ? true : simFilter(x)).ConvertAll(x => new ObjectPicker.RowInfo(x, new List<ObjectPicker.ColumnInfo>())))
-                    }, new List<Dialogs.ObjectPickerDialog.CommonHeaderInfo<SimDescription>>
-                    {
-                        new SimColumn(localizationPath),
-                    }, int.MaxValue, out confirmed, out cancelled);
-                if (confirmed)
-                {
-                    selectedSims = selectedSimList.ToArray();
-                    return true;
-                }
-                selectedSims = null;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
-                selectedSims = null;
                 return false;
             }
         }

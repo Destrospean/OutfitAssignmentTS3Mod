@@ -50,15 +50,24 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Common.cs" />
-    <Compile Include="Interactions.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ExtensionAttribute.cs" />
     <Compile Include="OutfitExtensions.cs" />
-    <Compile Include="Dialogs.cs" />
     <Compile Include="InteractionInstanceTypeUtils.cs" />
     <Compile Include="OutfitAssignmentUtils.cs" />
     <Compile Include="Tuning.cs" />
     <Compile Include="Replacements.cs" />
+    <Compile Include="UI\Columns.cs" />
+    <Compile Include="UI\Dialogs\ComboSelectionDialog.cs" />
+    <Compile Include="UI\Dialogs\ObjectPickerDialog.cs" />
+    <Compile Include="Interactions\AssignOutfitCategoryToInteraction.cs" />
+    <Compile Include="Interactions\AssignOutfitToInteraction.cs" />
+    <Compile Include="Interactions\ConfigureOutfitAssignment.cs" />
+    <Compile Include="Interactions\CopyAssignedOutfitToInteraction.cs" />
+    <Compile Include="Interactions\CopyOutfitAssignmentToSim.cs" />
+    <Compile Include="Interactions\EditAssignedOutfit.cs" />
+    <Compile Include="Interactions\ExtendAssignedOutfitToInteraction.cs" />
+    <Compile Include="Interactions\UnassignOutfitToInteraction.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib">
@@ -109,5 +118,10 @@
       <Name>Destrospean.InteractionInstanceAdditions</Name>
       <Private>False</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="UI\" />
+    <Folder Include="UI\Dialogs\" />
+    <Folder Include="Interactions\" />
   </ItemGroup>
 </Project>
