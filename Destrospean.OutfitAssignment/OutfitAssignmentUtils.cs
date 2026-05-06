@@ -329,8 +329,7 @@ namespace Destrospean.OutfitAssignment
             int outfitIndex;
             if (outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentCategoryPrefix))
             {
-                outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentCategoryPrefix.Length));
-                if (outfitCategory == 0)
+                if ((outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentCategoryPrefix.Length))) == 0)
                 {
                     return;
                 }

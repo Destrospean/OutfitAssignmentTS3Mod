@@ -8,23 +8,39 @@ namespace Destrospean.OutfitAssignment.Interactions
 {
     public class AssignOutfitCategoryToInteraction : ImmediateInteraction<Sim, GameObject>
     {
-        public static InteractionDefinition Singleton = new Definition();
+        public static InteractionDefinition GlobalOutfitSingleton = new Definition
+            {
+                IsGlobal = true
+            },
+        SimSingleton = new Definition
+            {
+                TargetIsSim = true
+            },
+        Singleton = new Definition();
 
         public const string sLocalizationKey = "/Interactions/AssignOutfitCategoryToInteraction";
 
         public class Definition : ImmediateInteractionDefinition<Sim, GameObject, AssignOutfitCategoryToInteraction>
         {
+            public bool IsGlobal = false,
+            TargetIsSim = false;
+
             public override string GetInteractionName(Sim actor, GameObject target, Sims3.Gameplay.Autonomy.InteractionObjectPair iop)
             {
-                Sim targetSim = target as Sim;
+                Sim targetSim = IsGlobal ? null : target as Sim ?? actor;
                 return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
             }
 
             public override string[] GetPath(bool isFemale)
             {
-                return new[]
+                string basePath = Common.Localize(isFemale, sLocalizationKey + "/Paths:Base");
+                return TargetIsSim ? new[]
                 {
-                    Common.Localize(isFemale, sLocalizationKey + ":Path")
+                    basePath
+                } : new[]
+                {
+                    basePath,
+                    Common.Localize(isFemale, sLocalizationKey + "/Paths:" + (IsGlobal ? "Global" : "Individual"))
                 };
             }
 
@@ -37,7 +53,7 @@ namespace Destrospean.OutfitAssignment.Interactions
 
         public override bool Run()
         {
-            Sim targetSim = Target as Sim;
+            Sim targetSim = ((Definition)InteractionDefinition).IsGlobal ? null : Target as Sim ?? Actor;
             Type[] selectedInteractionInstanceTypes;
             InteractionInstanceTypeUtils.CallbackTypes? entryCallbackType, exitCallbackType;
             OutfitCategories outfitCategory;

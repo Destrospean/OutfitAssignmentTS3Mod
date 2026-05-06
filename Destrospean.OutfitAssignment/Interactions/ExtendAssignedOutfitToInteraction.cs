@@ -7,23 +7,39 @@ namespace Destrospean.OutfitAssignment.Interactions
 {
     public class ExtendAssignedOutfitToInteraction : ImmediateInteraction<Sim, GameObject>
     {
-        public static InteractionDefinition Singleton = new Definition();
+        public static InteractionDefinition GlobalOutfitSingleton = new Definition
+            {
+                IsGlobal = true
+            },
+        SimSingleton = new Definition
+            {
+                TargetIsSim = true
+            },
+        Singleton = new Definition();
 
         public const string sLocalizationKey = "/Interactions/ExtendAssignedOutfitToInteraction";
 
         public class Definition : ImmediateInteractionDefinition<Sim, GameObject, ExtendAssignedOutfitToInteraction>
         {
+            public bool IsGlobal = false,
+            TargetIsSim = false;
+
             public override string GetInteractionName(Sim actor, GameObject target, Sims3.Gameplay.Autonomy.InteractionObjectPair iop)
             {
-                Sim targetSim = target as Sim;
+                Sim targetSim = IsGlobal ? null : target as Sim ?? actor;
                 return Common.Localize(targetSim != null && targetSim.IsFemale, sLocalizationKey + ":Name");
             }
 
             public override string[] GetPath(bool isFemale)
             {
-                return new[]
+                string basePath = Common.Localize(isFemale, sLocalizationKey + "/Paths:Base");
+                return TargetIsSim ? new[]
                 {
-                    Common.Localize(isFemale, sLocalizationKey + ":Path")
+                    basePath
+                } : new[]
+                {
+                    basePath,
+                    Common.Localize(isFemale, sLocalizationKey + "/Paths:" + (IsGlobal ? "Global" : "Individual"))
                 };
             }
 
@@ -37,7 +53,8 @@ namespace Destrospean.OutfitAssignment.Interactions
 
         public override bool Run()
         {
-            Sim targetSim = Target as Sim;
+            bool isGlobal = ((Definition)InteractionDefinition).IsGlobal;
+            Sim targetSim = isGlobal ? null : Target as Sim ?? Actor;
             Type[] destinationInteractionInstanceTypes, sourceInteractionInstanceTypes;
             if (!InteractionInstanceTypeUtils.TryGetSelectedInteractionInstanceTypes(out sourceInteractionInstanceTypes, Array.FindAll(InteractionInstanceTypeUtils.InteractionInstanceTypes, x => OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == targetSim.GetSimDescription() && (targetSim != null || y.SpecialOutfitKey.StartsWith(Actor.GetGlobalAssignedOutfitPrefix())) && y.InteractionInstanceType == x.FullName)), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectSourceNamespace"), Common.Localize(CopyAssignedOutfitToInteraction.sLocalizationKey + "/Miscellaneous:SelectSourceInteraction")))
             {
@@ -51,8 +68,7 @@ namespace Destrospean.OutfitAssignment.Interactions
                 {
                     if (!string.IsNullOrEmpty(specialOutfitKey))
                     {
-                        Common.Notify(Common.Localize(targetSim != null && targetSim.IsFemale, AssignOutfitToInteraction.sLocalizationKey + "/Messages:MultipleOutfitsForInteractionsFound", targetSim ?? Actor), targetSim.GetSimDescription(), Sims3.UI.StyledNotification.NotificationStyle.kSystemMessage);
-                        return true;
+                        return AssignOutfitToInteraction.NotifyMultipleOutfitsFound(targetSim, targetSim ?? Actor, isGlobal);
                     }
                     specialOutfitKey = outfitAssignment.SpecialOutfitKey;
                 }
