@@ -61,7 +61,7 @@ namespace Destrospean.OutfitAssignment.Interactions
             {
                 foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                 {
-                    targetSim.GetSimDescription().AssignOutfitToInteraction(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix + outfitCategory, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                    targetSim.GetSimDescription().AssignOutfitToInteraction(targetSim == null ? Actor.GetGlobalAssignedOutfitPrefix(true) + outfitCategory : OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix + outfitCategory, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value, Actor.SimDescription);
                 }
             }
             return true;

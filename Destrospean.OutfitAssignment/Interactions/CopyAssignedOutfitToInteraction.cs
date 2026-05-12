@@ -90,7 +90,7 @@ namespace Destrospean.OutfitAssignment.Interactions
                 }
                 foreach (Type interactionInstanceType in destinationInteractionInstanceTypes)
                 {
-                    targetSim.GetSimDescription().AssignOutfitToInteraction(destinationSpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                    targetSim.GetSimDescription().AssignOutfitToInteraction(destinationSpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value, Actor.SimDescription);
                 }
             }
             return true;

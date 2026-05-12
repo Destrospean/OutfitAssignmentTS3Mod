@@ -29,6 +29,7 @@ namespace Destrospean.OutfitAssignment
                 };
             World.sOnWorldLoadFinishedEventHandler += (sender, e) =>
                 {
+                    OutfitAssignmentUtils.OutfitAssignments.RemoveAll(x => x.SimDescription == null && x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix));
                     foreach (Sim sim in Sims3.Gameplay.Queries.GetObjects<Sim>())
                     {
                         AddInteractions(sim);

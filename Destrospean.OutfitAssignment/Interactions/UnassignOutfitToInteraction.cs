@@ -88,7 +88,14 @@ namespace Destrospean.OutfitAssignment.Interactions
                             targetSim.SimDescription.RemoveSpecialOutfit(outfitAssignment.SpecialOutfitKey);
                         }
                     }
-                    OutfitAssignmentUtils.UnassignOutfitToInteraction(targetSim.GetSimDescription(), interactionInstanceType);
+                    if (targetSim == null)
+                    {
+                        Actor.SimDescription.UnassignGlobalOutfitToInteraction(interactionInstanceType);
+                    }
+                    else
+                    {
+                        targetSim.SimDescription.UnassignOutfitToInteraction(interactionInstanceType);
+                    }
                 }
             }
             return true;

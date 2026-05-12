@@ -133,7 +133,7 @@ namespace Destrospean.OutfitAssignment.Interactions
                 {
                     foreach (Type interactionInstanceType in selectedInteractionInstanceTypes)
                     {
-                        targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        targetSim.GetSimDescription().AssignOutfitToInteraction(specialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value, Actor.SimDescription);
                     }
                     if (targetSim == null || isPartial)
                     {

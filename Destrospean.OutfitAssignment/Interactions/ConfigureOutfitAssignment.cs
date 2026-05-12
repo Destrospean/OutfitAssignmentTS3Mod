@@ -73,7 +73,7 @@ namespace Destrospean.OutfitAssignment.Interactions
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (targetSim.GetSimDescription().TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment, Actor.SimDescription))
                     {
-                        targetSim.GetSimDescription().AssignOutfitToInteraction(outfitAssignment.SpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value);
+                        targetSim.GetSimDescription().AssignOutfitToInteraction(outfitAssignment.SpecialOutfitKey, interactionInstanceType, entryCallbackType.Value, exitCallbackType.Value, Actor.SimDescription);
                     }
                     OutfitAssignmentUtils.AssignedOutfit assignedOutfit; 
                     if (changePartOverrides && partOverrides != null && OutfitAssignmentUtils.AssignedOutfits.TryGetValue(outfitAssignment.SpecialOutfitKey, out assignedOutfit))

@@ -91,7 +91,8 @@ namespace Destrospean.OutfitAssignment
                     {
                         sim.AddAssignedOutfit(outfitAssignment.SpecialOutfitKey);
                     }
-                    OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix.Length)) : OutfitCategories.Special;
+                    string categoryForGlobalKey = null;
+                    OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) || outfitAssignment.SpecialOutfitKey.StartsWith(categoryForGlobalKey = sim.GetGlobalAssignedOutfitPrefix(true)) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring((categoryForGlobalKey ?? OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix).Length)) : OutfitCategories.Special;
                     if (outfitCategory == 0)
                     {
                         return false;

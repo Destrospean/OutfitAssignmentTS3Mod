@@ -207,9 +207,16 @@ namespace Destrospean.OutfitAssignment
             return AssignedOutfits.TryGetValue(assignedSpecialOutfitKey, out assignedOutfit) && sim.SimDescription.AddAssignedOutfit(assignedOutfit, simSpecialOutfitKey ?? assignedSpecialOutfitKey);
         }
 
-        public static void AssignOutfitToInteraction(this SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceTypeUtils.CallbackTypes entryCallbackType, InteractionInstanceTypeUtils.CallbackTypes exitCallbackType)
+        public static void AssignOutfitToInteraction(this SimDescription simDescription, string specialOutfitKey, Type interactionInstanceType, InteractionInstanceTypeUtils.CallbackTypes entryCallbackType, InteractionInstanceTypeUtils.CallbackTypes exitCallbackType, SimDescription fallbackSimDescription)
         {
-            UnassignOutfitToInteraction(simDescription, interactionInstanceType);
+            if (simDescription == null)
+            {
+                fallbackSimDescription.UnassignGlobalOutfitToInteraction(interactionInstanceType);
+            }
+            else
+            {
+                simDescription.UnassignOutfitToInteraction(interactionInstanceType);
+            }
             OutfitAssignments.Add(new OutfitAssignment(simDescription, specialOutfitKey, interactionInstanceType, entryCallbackType, exitCallbackType));
             IndexOutfitAssignments();
         }
@@ -240,9 +247,9 @@ namespace Destrospean.OutfitAssignment
             return OutfitAssignments.FindAll(x => x.SimDescription == simDescription).ToArray();
         }
 
-        public static string GetGlobalAssignedOutfitPrefix(this Sim sim)
+        public static string GetGlobalAssignedOutfitPrefix(this Sim sim, bool isCategory = false)
         {
-            return OutfitAssignmentGlobalPrefix + OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + "_";
+            return OutfitAssignmentGlobalPrefix + OutfitUtils.GetAgePrefix(sim.SimDescription.Age, true) + OutfitUtils.GetGenderPrefix(sim.SimDescription.Gender) + (isCategory ? "_Category_" : "_");
         }
 
         public static void IndexOutfitAssignments()
@@ -327,9 +334,10 @@ namespace Destrospean.OutfitAssignment
             }
             OutfitCategories outfitCategory;
             int outfitIndex;
-            if (outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentCategoryPrefix))
+            string categoryForGlobalKey = null;
+            if (outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentCategoryPrefix) || outfitAssignment.SpecialOutfitKey.StartsWith(categoryForGlobalKey = sim.GetGlobalAssignedOutfitPrefix(true)))
             {
-                if ((outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring(OutfitAssignmentCategoryPrefix.Length))) == 0)
+                if ((outfitCategory = (OutfitCategories)Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring((categoryForGlobalKey ?? OutfitAssignmentCategoryPrefix).Length))) == 0)
                 {
                     return;
                 }
@@ -397,10 +405,20 @@ namespace Destrospean.OutfitAssignment
             return simDescription == null ? fallbackSimDescription.TryGetGlobalOutfitAssignment(interactionInstanceType, out outfitAssignment) : IndexedOutfitAssignments.TryGetValue(interactionInstanceType.FullName + "_" + simDescription.SimDescriptionId, out outfitAssignment);
         }
 
+        public static void UnassignGlobalOutfitToInteraction(this SimDescription simDescription, Type interactionInstanceType)
+        {
+            OutfitAssignment outfitAssignment;
+            if (simDescription.TryGetGlobalOutfitAssignment(interactionInstanceType, out outfitAssignment))
+            {
+                OutfitAssignments.Remove(outfitAssignment);
+                IndexOutfitAssignments();
+            }
+        }
+
         public static void UnassignOutfitToInteraction(this SimDescription simDescription, Type interactionInstanceType)
         {
             OutfitAssignment outfitAssignment;
-            if (simDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment) || simDescription.TryGetGlobalOutfitAssignment(interactionInstanceType, out outfitAssignment))
+            if (simDescription.TryGetOutfitAssignment(interactionInstanceType, out outfitAssignment))
             {
                 OutfitAssignments.Remove(outfitAssignment);
                 IndexOutfitAssignments();
