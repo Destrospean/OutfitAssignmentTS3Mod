@@ -2,7 +2,6 @@
 using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
-using Tuning = Sims3.Gameplay.Destrospean.OutfitAssignment;
 
 namespace Destrospean.OutfitAssignment
 {
