@@ -47,7 +47,6 @@ namespace Destrospean.OutfitAssignment.Interactions
             {
                 Sim targetSim = target as Sim;
                 return Array.FindAll(targetSim.GetSimDescription().GetAllOutfitAssignments(), x => targetSim != null || x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) || x.SpecialOutfitKey.StartsWith(actor.GetGlobalAssignedOutfitPrefix())).Length > 0;
-
             }
         }
 
