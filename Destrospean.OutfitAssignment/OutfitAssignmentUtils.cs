@@ -18,7 +18,7 @@ namespace Destrospean.OutfitAssignment
         {
             get
             {
-                return (Dictionary<string, AssignedOutfit>)typeof(OutfitAssignmentUtils).GetField("GlobalOutfits", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static).GetValue(null);
+                return (Dictionary<string, AssignedOutfit>)typeof(OutfitAssignmentUtils).GetField("GlobalOutfits").GetValue(null);
             }
         }
 
