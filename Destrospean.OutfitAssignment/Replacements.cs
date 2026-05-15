@@ -83,23 +83,21 @@ namespace Destrospean.OutfitAssignment
         {
             Sim sim = (Sim)(object)this;
             OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-            if (!OutfitAssignmentUtils.TimeToChangeBackList.Contains(sim.SimDescription))
+            if (!OutfitAssignmentUtils.TimeToChangeBackList.Contains(sim.SimDescription) && sim.CurrentInteraction != null && (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) || sim.SimDescription.TryGetGlobalOutfitAssignment(sim.CurrentInteraction, out outfitAssignment)))
             {
-                if (sim.SimDescription.TryGetOutfitAssignment(sim.CurrentInteraction, out outfitAssignment) || sim.SimDescription.TryGetGlobalOutfitAssignment(sim.CurrentInteraction, out outfitAssignment))
+                if (OutfitAssignmentUtils.AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
                 {
-                    if (OutfitAssignmentUtils.AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
-                    {
-                        sim.AddAssignedOutfit(outfitAssignment.SpecialOutfitKey);
-                    }
-                    string categoryForGlobalKey = null;
-                    OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) || outfitAssignment.SpecialOutfitKey.StartsWith(categoryForGlobalKey = sim.GetGlobalAssignedOutfitPrefix(true)) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring((categoryForGlobalKey ?? OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix).Length)) : OutfitCategories.Special;
-                    if (outfitCategory == 0)
-                    {
-                        return false;
-                    }
-                    sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
-                    spin = new Sim.SwitchOutfitHelper(sim, outfitCategory, outfitAssignment.SpecialOutfitKey.StartsWith(categoryForGlobalKey ?? OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(outfitCategory) - 1) : 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+                    sim.AddAssignedOutfit(outfitAssignment.SpecialOutfitKey);
                 }
+                string categoryForGlobalKey = null;
+                OutfitCategories outfitCategory = outfitAssignment.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) || outfitAssignment.SpecialOutfitKey.StartsWith(categoryForGlobalKey = sim.GetGlobalAssignedOutfitPrefix(true)) ? (OutfitCategories)System.Enum.Parse(typeof(OutfitCategories), outfitAssignment.SpecialOutfitKey.Substring((categoryForGlobalKey ?? OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix).Length)) : OutfitCategories.Special;
+                if (outfitCategory == 0)
+                {
+                    return false;
+                }
+                sim.SimDescription.CreateOutfitForCategoryIfNecessary(outfitCategory);
+                spin = new Sim.SwitchOutfitHelper(sim, outfitCategory, outfitAssignment.SpecialOutfitKey.StartsWith(categoryForGlobalKey ?? OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix) ? Tuning.kPickRandomOutfitIndex ? Sims3.Gameplay.Core.RandomUtil.GetInt(sim.SimDescription.GetOutfitCount(outfitCategory) - 1) : 0 : sim.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)));
+
             }
             spin.Start();
             spin.Wait(true);
