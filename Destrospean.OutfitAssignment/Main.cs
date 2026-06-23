@@ -96,7 +96,7 @@ namespace Destrospean.OutfitAssignment
                     simDescriptionDisposedListener = null;
                     simInstantiatedListener = null;
                 };
-            InteractionInstanceAdditions.OnInteractedStarted += (interactionInstance) =>
+            InteractionInstanceAdditions.OnInteractedStarted += interactionInstance =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)))
@@ -117,7 +117,7 @@ namespace Destrospean.OutfitAssignment
                         }
                     }
                 };
-            InteractionInstanceAdditions.OnInteractionEnded += (interactionInstance) =>
+            InteractionInstanceAdditions.OnInteractionEnded += interactionInstance =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
@@ -153,7 +153,7 @@ namespace Destrospean.OutfitAssignment
                         }
                     }
                 };
-            InteractionInstanceAdditions.StandardEntryPreCallCallback += (interactionInstance) =>
+            InteractionInstanceAdditions.StandardEntryPreCallCallback += interactionInstance =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged || outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardEntry))
@@ -161,7 +161,7 @@ namespace Destrospean.OutfitAssignment
                         interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
                     }
                 };
-            InteractionInstanceAdditions.StandardExitPostCallCallback += (interactionInstance) =>
+            InteractionInstanceAdditions.StandardExitPostCallCallback += interactionInstance =>
                 {
                     OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
                     if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardExit)
