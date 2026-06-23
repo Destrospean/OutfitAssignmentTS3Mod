@@ -1,4 +1,5 @@
-﻿using Destrospean.OutfitAssignment.Interactions;
+﻿using System;
+using Destrospean.OutfitAssignment.Interactions;
 using Sims3.Gameplay.Actors;
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
@@ -13,8 +14,8 @@ namespace Destrospean.OutfitAssignment
         static Main()
         {
             InteractionInstanceTypeUtils.InitInteractionInstanceTypes();
-            InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("GetCategoryAndIndexToUse", System.Array.ConvertAll(typeof(Replacements).GetMethod("GetCategoryAndIndexToUse").GetParameters(), x => x.ParameterType)), typeof(Replacements).GetMethod("GetCategoryAndIndexToUse"));
-            InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("SwitchToOutfitWithSpin", System.Array.ConvertAll(typeof(Replacements).GetMethod("SwitchToOutfitWithSpin").GetParameters(), x => x.ParameterType)), typeof(Replacements).GetMethod("SwitchToOutfitWithSpin"));
+            InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("GetCategoryAndIndexToUse", Array.ConvertAll(typeof(Replacements).GetMethod("GetCategoryAndIndexToUse").GetParameters(), x => x.ParameterType)), typeof(Replacements).GetMethod("GetCategoryAndIndexToUse"));
+            InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("SwitchToOutfitWithSpin", Array.ConvertAll(typeof(Replacements).GetMethod("SwitchToOutfitWithSpin").GetParameters(), x => x.ParameterType)), typeof(Replacements).GetMethod("SwitchToOutfitWithSpin"));
             EventListener simAgeTransitionListener = null,
             simDescriptionDisposedListener = null,
             simInstantiatedListener = null;
@@ -47,9 +48,9 @@ namespace Destrospean.OutfitAssignment
                                     OutfitAssignmentUtils.RemoveAllOutfitAssignments(sim.SimDescription, true);
                                 }
                             }
-                            catch (System.Exception ex)
+                            catch (Exception ex)
                             {
-                                ((IScriptErrorWindow)System.AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                             }
                             return ListenerAction.Keep;
                         });
@@ -63,9 +64,9 @@ namespace Destrospean.OutfitAssignment
                                     OutfitAssignmentUtils.RemoveAllOutfitAssignments(sim.SimDescription);
                                 }
                             }
-                            catch (System.Exception ex)
+                            catch (Exception ex)
                             {
-                                ((IScriptErrorWindow)System.AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                             }
                             return ListenerAction.Keep;
                         });
@@ -79,9 +80,9 @@ namespace Destrospean.OutfitAssignment
                                     AddInteractions(sim);
                                 }
                             }
-                            catch (System.Exception ex)
+                            catch (Exception ex)
                             {
-                                ((IScriptErrorWindow)System.AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                                ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                             }
                             return ListenerAction.Keep;
                         });
