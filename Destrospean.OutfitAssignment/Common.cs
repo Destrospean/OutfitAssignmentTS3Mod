@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Sims3.Gameplay.Autonomy;
+﻿using System.Collections.Generic;
 using Sims3.Gameplay.CAS;
-using Sims3.Gameplay.Utilities;
 using Sims3.UI;
 
 namespace Destrospean.OutfitAssignment
@@ -25,19 +22,6 @@ namespace Destrospean.OutfitAssignment
             }
         }
 
-        public static void CopyTuning(Type baseType, Type oldType, Type newType)
-        {
-            if (AutonomyTuning.GetTuning(newType.FullName, baseType.FullName) == null)
-            {
-                InteractionTuning tuning = AutonomyTuning.GetTuning(oldType, oldType.FullName, baseType);
-                if (tuning != null)
-                {
-                    AutonomyTuning.AddTuning(newType.FullName, baseType.FullName, tuning);
-                }
-            }
-            InteractionObjectPair.sTuningCache.Remove(new Pair<Type, Type>(newType, baseType));
-        }
-
         public static SimDescription GetSimDescription(this Sims3.Gameplay.Actors.Sim sim)
         {
             return sim == null ? null : sim.SimDescription;
@@ -45,17 +29,17 @@ namespace Destrospean.OutfitAssignment
 
         public static string Localize(string entryKey)
         {
-            return Localization.LocalizeString(kLocalizationPath + entryKey);
+            return Sims3.Gameplay.Utilities.Localization.LocalizeString(kLocalizationPath + entryKey);
         }
 
         public static string Localize(string entryKey, params object[] parameters)
         {
-            return Localization.LocalizeString(kLocalizationPath + entryKey, parameters);
+            return Sims3.Gameplay.Utilities.Localization.LocalizeString(kLocalizationPath + entryKey, parameters);
         }
 
         public static string Localize(bool isFemale, string entryKey, params object[] parameters)
         {
-            return Localization.LocalizeString(isFemale, kLocalizationPath + entryKey, parameters);
+            return Sims3.Gameplay.Utilities.Localization.LocalizeString(isFemale, kLocalizationPath + entryKey, parameters);
         }
 
         public static void Notify(string message, SimDescription simDescription, StyledNotification.NotificationStyle style)
@@ -80,14 +64,7 @@ namespace Destrospean.OutfitAssignment
                     return;
                 }
             }
-            if (simDescription.CreatedSim != null)
-            {
-                StyledNotification.Show(new StyledNotification.Format(message, Sims3.SimIFace.ObjectGuid.InvalidObjectGuid, simDescription.CreatedSim.ObjectId, style));
-            }
-            else
-            {
-                StyledNotification.Show(new StyledNotification.Format(message, style));
-            }
+            StyledNotification.Show(simDescription.CreatedSim == null ? new StyledNotification.Format(message, style) : new StyledNotification.Format(message, Sims3.SimIFace.ObjectGuid.InvalidObjectGuid, simDescription.CreatedSim.ObjectId, style));
         }
 
         public static bool ShowSimListDialog(out SimDescription[] selectedSims, SimDescriptionFilterFunc filterBy = null)
@@ -111,9 +88,9 @@ namespace Destrospean.OutfitAssignment
                 selectedSims = null;
                 return false;
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                ((Sims3.SimIFace.IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
+                ((Sims3.SimIFace.IScriptErrorWindow)System.AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                 selectedSims = null;
                 return false;
             }
