@@ -98,75 +98,110 @@ namespace Destrospean.OutfitAssignment
                 };
             InteractionInstanceAdditions.OnInteractedStarted += interactionInstance =>
                 {
-                    OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)))
+                    try
                     {
-                        if (interactionInstance.InstanceActor.CurrentOutfitCategory != Sims3.SimIFace.CAS.OutfitCategories.Special || interactionInstance.InstanceActor.CurrentOutfitIndex != interactionInstance.InstanceActor.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)))
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)))
                         {
-                            OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == interactionInstance.InstanceActor.SimDescription);
-                            OutfitAssignmentUtils.PreviousOutfits.Add(new OutfitAssignmentUtils.Outfit
-                                {
-                                    Category = interactionInstance.InstanceActor.CurrentOutfitCategory,
-                                    Index = interactionInstance.InstanceActor.CurrentOutfitIndex,
-                                    SimDescription = interactionInstance.InstanceActor.SimDescription
-                                });
+                            if (interactionInstance.InstanceActor.CurrentOutfitCategory != Sims3.SimIFace.CAS.OutfitCategories.Special || interactionInstance.InstanceActor.CurrentOutfitIndex != interactionInstance.InstanceActor.SimDescription.GetSpecialOutfitIndexFromKey(ResourceUtils.HashString32(outfitAssignment.SpecialOutfitKey)))
+                            {
+                                OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == interactionInstance.InstanceActor.SimDescription);
+                                OutfitAssignmentUtils.PreviousOutfits.Add(new OutfitAssignmentUtils.Outfit
+                                    {
+                                        Category = interactionInstance.InstanceActor.CurrentOutfitCategory,
+                                        Index = interactionInstance.InstanceActor.CurrentOutfitIndex,
+                                        SimDescription = interactionInstance.InstanceActor.SimDescription
+                                    });
+                            }
+                            if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted)
+                            {
+                                interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
+                            }
                         }
-                        if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionStarted)
-                        {
-                            interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                     }
                 };
             InteractionInstanceAdditions.OnInteractionEnded += interactionInstance =>
                 {
-                    OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
+                    try
                     {
-                        interactionInstance.InstanceActor.SwitchToPreviousOutfit();
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.InteractionEnded)
+                        {
+                            interactionInstance.InstanceActor.SwitchToPreviousOutfit();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                     }
                 };
             InteractionInstanceAdditions.OnWaitForSynchronizationLevel += (interactionInstance, syncLevel) =>
                 {
-                    OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)))
+                    try
                     {
-                        switch (syncLevel)
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)))
                         {
-                            case Sim.SyncLevel.Committed:
-                                if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCommitted)
-                                {
-                                    interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
-                                }
-                                break;
-                            case Sim.SyncLevel.Completed:
-                                if (outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCompleted)
-                                {
-                                    interactionInstance.InstanceActor.SwitchToPreviousOutfit();
-                                }
-                                break;
-                            case Sim.SyncLevel.Routed:
-                                if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelRouted)
-                                {
-                                    interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
-                                }
-                                break;
+                            switch (syncLevel)
+                            {
+                                case Sim.SyncLevel.Committed:
+                                    if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCommitted)
+                                    {
+                                        interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
+                                    }
+                                    break;
+                                case Sim.SyncLevel.Completed:
+                                    if (outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelCompleted)
+                                    {
+                                        interactionInstance.InstanceActor.SwitchToPreviousOutfit();
+                                    }
+                                    break;
+                                case Sim.SyncLevel.Routed:
+                                    if (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.SyncLevelRouted)
+                                    {
+                                        interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
+                                    }
+                                    break;
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                     }
                 };
             InteractionInstanceAdditions.StandardEntryPreCallCallback += interactionInstance =>
                 {
-                    OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged || outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardEntry))
+                    try
                     {
-                        interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && (outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.OutfitChanged || outfitAssignment.EntryCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardEntry))
+                        {
+                            interactionInstance.InstanceActor.SwitchToAssignedOutfit(outfitAssignment);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                     }
                 };
             InteractionInstanceAdditions.StandardExitPostCallCallback += interactionInstance =>
                 {
-                    OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
-                    if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardExit)
+                    try
                     {
-                        interactionInstance.InstanceActor.SwitchToPreviousOutfit();
+                        OutfitAssignmentUtils.OutfitAssignment outfitAssignment;
+                        if (interactionInstance != null && interactionInstance.InstanceActor != null && interactionInstance.InstanceActor.SimDescription != null && (interactionInstance.InstanceActor.SimDescription.TryGetOutfitAssignment(interactionInstance, out outfitAssignment) || interactionInstance.InstanceActor.SimDescription.TryGetGlobalOutfitAssignment(interactionInstance, out outfitAssignment)) && outfitAssignment.ExitCallbackType == InteractionInstanceTypeUtils.CallbackTypes.StandardExit)
+                        {
+                            interactionInstance.InstanceActor.SwitchToPreviousOutfit();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ((IScriptErrorWindow)AppDomain.CurrentDomain.GetData("ScriptErrorWindow")).DisplayScriptError(null, ex);
                     }
                 };
         }

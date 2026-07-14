@@ -47,7 +47,7 @@ namespace Destrospean.OutfitAssignment.Interactions
             public override bool Test(Sim actor, GameObject target, bool isAutonomous, ref Sims3.SimIFace.GreyedOutTooltipCallback greyedOutTooltipCallback)
             {
                 Sim targetSim = target as Sim;
-                return targetSim == null || targetSim.IsHuman;
+                return targetSim == null || targetSim.SimDescription != null && targetSim.IsHuman;
             }
         }
 
