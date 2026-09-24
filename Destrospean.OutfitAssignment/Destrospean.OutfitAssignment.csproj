@@ -68,6 +68,7 @@
     <Compile Include="Interactions\EditAssignedOutfit.cs" />
     <Compile Include="Interactions\ExtendAssignedOutfitToInteraction.cs" />
     <Compile Include="Interactions\UnassignOutfitToInteraction.cs" />
+    <Compile Include="NRaasMasterControllerIntegration.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib">
@@ -108,6 +109,10 @@
     </Reference>
     <Reference Include="Sims3Metadata">
       <HintPath>..\libs\Sims3MetaData.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="NRaasMasterController">
+      <HintPath>..\libs\NRaasMasterController.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

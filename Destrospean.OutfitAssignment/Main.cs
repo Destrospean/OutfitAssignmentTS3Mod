@@ -9,13 +9,17 @@ namespace Destrospean.OutfitAssignment
     public class Main
     {
         [Tunable]
-        protected static bool kInstantiator;
+        static bool kIntegrateNRaasMasterController = true;
 
         static Main()
         {
             InteractionInstanceTypeUtils.InitInteractionInstanceTypes();
             InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("GetCategoryAndIndexToUse", Array.ConvertAll(typeof(Replacements).GetMethod("GetCategoryAndIndexToUse").GetParameters(), x => x.ParameterType)), typeof(Replacements).GetMethod("GetCategoryAndIndexToUse"));
             InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("SwitchToOutfitWithSpin", Array.ConvertAll(typeof(Replacements).GetMethod("SwitchToOutfitWithSpin").GetParameters(), x => x.ParameterType)), typeof(Replacements).GetMethod("SwitchToOutfitWithSpin"));
+            if (kIntegrateNRaasMasterController && Array.Exists(AppDomain.CurrentDomain.GetAssemblies(), x => x.GetName().Name == "NRaasMasterController"))
+            {
+                NRaasMasterControllerIntegration.Init();
+            }
             EventListener simAgeTransitionListener = null,
             simDescriptionDisposedListener = null,
             simInstantiatedListener = null;

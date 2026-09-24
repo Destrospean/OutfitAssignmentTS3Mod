@@ -1,15 +1,12 @@
-﻿using Sims3.Gameplay.Actors;
+﻿using System;
 using Sims3.Gameplay.CAS;
 using Sims3.SimIFace.CAS;
 
-namespace Destrospean.OutfitAssignment.MasterController
+namespace Destrospean.OutfitAssignment
 {
-    public class Main
+    public class NRaasMasterControllerIntegration
     {
-        [Sims3.SimIFace.Tunable]
-        protected static bool kInstantiator;
-
-        static Main()
+        public static void Init()
         {
             OutfitExtensions.EditSpecialOutfit = (sim, specialOutfitKey) =>
                 {
@@ -39,3 +36,4 @@ namespace Destrospean.OutfitAssignment.MasterController
         }
     }
 }
+
