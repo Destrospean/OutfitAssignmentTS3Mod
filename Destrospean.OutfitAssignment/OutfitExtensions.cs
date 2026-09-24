@@ -4,7 +4,7 @@ using Sims3.SimIFace;
 using Sims3.SimIFace.CAS;
 using Sims3.UI.CAS;
 
-namespace Destrospean.OutfitAssignment
+namespace Destrospean.Utils
 {
     public static class OutfitExtensions
     {

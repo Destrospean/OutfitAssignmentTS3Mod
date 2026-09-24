@@ -1,6 +1,7 @@
 ﻿using System;
 using Destrospean.OutfitAssignment.Interactions;
 using Sims3.Gameplay.Actors;
+using Sims3.Gameplay.Destrospean.Utils;
 using Sims3.Gameplay.EventSystem;
 using Sims3.SimIFace;
 
@@ -9,14 +10,14 @@ namespace Destrospean.OutfitAssignment
     public class Main
     {
         [Tunable]
-        static bool kIntegrateNRaasMasterController = true;
+        protected static bool kInstantiator;
 
         static Main()
         {
             InteractionInstanceTypeUtils.InitInteractionInstanceTypes();
             InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("GetCategoryAndIndexToUse", Array.ConvertAll(typeof(Replacements).GetMethod("GetCategoryAndIndexToUse").GetParameters(), x => x.ParameterType)), typeof(Replacements).GetMethod("GetCategoryAndIndexToUse"));
             InteractionInstanceAdditions.ReplaceMethod(typeof(Sim).GetMethod("SwitchToOutfitWithSpin", Array.ConvertAll(typeof(Replacements).GetMethod("SwitchToOutfitWithSpin").GetParameters(), x => x.ParameterType)), typeof(Replacements).GetMethod("SwitchToOutfitWithSpin"));
-            if (kIntegrateNRaasMasterController && Array.Exists(AppDomain.CurrentDomain.GetAssemblies(), x => x.GetName().Name == "NRaasMasterController"))
+            if (Array.Exists(AppDomain.CurrentDomain.GetAssemblies(), x => x.GetName().Name == "NRaasMasterController"))
             {
                 NRaasMasterControllerIntegration.Init();
             }
