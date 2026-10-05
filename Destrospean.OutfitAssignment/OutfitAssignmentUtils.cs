@@ -246,7 +246,7 @@ namespace Destrospean.OutfitAssignment
 
         public static OutfitAssignment[] GetAllOutfitAssignments(this SimDescription simDescription)
         {
-            return OutfitAssignments.FindAll(x => x.SimDescription == simDescription).ToArray();
+            return OutfitAssignments.FindAll(x => simDescription == null && x.SimDescription == null || simDescription != null && x.SimDescription != null && simDescription.SimDescriptionId == x.SimDescription.SimDescriptionId).ToArray();
         }
 
         public static string GetGlobalAssignedOutfitPrefix(this Sim sim, bool isCategory = false)
@@ -267,7 +267,7 @@ namespace Destrospean.OutfitAssignment
         {
             foreach (OutfitAssignment outfitAssignment in new List<OutfitAssignment>(OutfitAssignments))
             {
-                if (outfitAssignment.SimDescription == simDescription)
+                if (simDescription == null && outfitAssignment.SimDescription == null || simDescription != null && outfitAssignment.SimDescription != null && outfitAssignment.SimDescription.SimDescriptionId == simDescription.SimDescriptionId)
                 {
                     OutfitAssignments.Remove(outfitAssignment);
                     if (AssignedOutfits.ContainsKey(outfitAssignment.SpecialOutfitKey))
@@ -368,7 +368,7 @@ namespace Destrospean.OutfitAssignment
         public static void SwitchToPreviousOutfit(this Sim sim, bool spin = true)
         {
             TimeToChangeBackList.Add(sim.SimDescription);
-            int previousOutfitIndex = PreviousOutfits.FindIndex(x => x.SimDescription == sim.SimDescription);
+            int previousOutfitIndex = PreviousOutfits.FindIndex(x => x.SimDescription.SimDescriptionId == sim.SimDescription.SimDescriptionId);
             if (previousOutfitIndex > -1)
             {
                 if (!sim.BuffManager.HasElement(BuffNames.Singed) && !sim.BuffManager.HasElement(BuffNames.SingedElectricity) && !sim.BuffManager.HasElement(BuffNames.EmbarrassedClothesHidden) && !sim.BuffManager.DisallowClothesChange() && !sim.OccultManager.DisallowClothesChange())
@@ -384,7 +384,7 @@ namespace Destrospean.OutfitAssignment
                 }
                 PreviousOutfits.RemoveAt(previousOutfitIndex);
             }
-            TimeToChangeBackList.RemoveAll(x => x == sim.SimDescription);
+            TimeToChangeBackList.RemoveAll(x => x.SimDescriptionId == sim.SimDescription.SimDescriptionId);
         }
 
         public static bool TryGetGlobalOutfitAssignment(this SimDescription simDescription, Sims3.Gameplay.Interactions.InteractionInstance interactionInstance, out OutfitAssignment outfitAssignment)

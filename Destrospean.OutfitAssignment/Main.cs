@@ -35,6 +35,7 @@ namespace Destrospean.OutfitAssignment
             World.sOnWorldLoadFinishedEventHandler += (sender, e) =>
                 {
                     OutfitAssignmentUtils.OutfitAssignments.RemoveAll(x => x.SimDescription == null && x.SpecialOutfitKey.StartsWith(OutfitAssignmentUtils.OutfitAssignmentCategoryPrefix));
+                    OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => !OutfitAssignmentUtils.OutfitAssignments.Exists(y => y.SimDescription == x.SimDescription));
                     foreach (Sim sim in Sims3.Gameplay.Queries.GetObjects<Sim>())
                     {
                         AddInteractions(sim);
@@ -51,6 +52,7 @@ namespace Destrospean.OutfitAssignment
                                 if (sim != null)
                                 {
                                     OutfitAssignmentUtils.RemoveAllOutfitAssignments(sim.SimDescription, true);
+                                    OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == sim.SimDescription);
                                 }
                             }
                             catch (Exception ex)
@@ -67,6 +69,7 @@ namespace Destrospean.OutfitAssignment
                                 if (sim != null)
                                 {
                                     OutfitAssignmentUtils.RemoveAllOutfitAssignments(sim.SimDescription);
+                                    OutfitAssignmentUtils.PreviousOutfits.RemoveAll(x => x.SimDescription == sim.SimDescription);
                                 }
                             }
                             catch (Exception ex)
@@ -215,30 +218,30 @@ namespace Destrospean.OutfitAssignment
         {
             if (gameObject is Sim)
             {
-                gameObject.AddInteraction(AssignOutfitCategoryToInteraction.SimSingleton, true);
-                gameObject.AddInteraction(AssignOutfitToInteraction.PartialOutfitSimSingleton, true);
                 gameObject.AddInteraction(AssignOutfitToInteraction.SimSingleton, true);
+                gameObject.AddInteraction(AssignOutfitToInteraction.PartialOutfitSimSingleton, true);
+                gameObject.AddInteraction(AssignOutfitCategoryToInteraction.SimSingleton, true);
+                gameObject.AddInteraction(EditAssignedOutfit.SimSingleton, true);
                 gameObject.AddInteraction(ConfigureOutfitAssignment.SimSingleton, true);
                 gameObject.AddInteraction(CopyAssignedOutfitToInteraction.SimSingleton, true);
                 gameObject.AddInteraction(CopyOutfitAssignmentToSim.SimSingleton, true);
-                gameObject.AddInteraction(EditAssignedOutfit.SimSingleton, true);
                 gameObject.AddInteraction(ExtendAssignedOutfitToInteraction.SimSingleton, true);
                 gameObject.AddInteraction(UnassignOutfitToInteraction.SimSingleton, true);
             }
             else if (gameObject != null)
             {
+                gameObject.AddInteraction(AssignOutfitToInteraction.GlobalOutfitSingleton, true);
+                gameObject.AddInteraction(AssignOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(AssignOutfitToInteraction.PartialOutfitSingleton, true);
                 gameObject.AddInteraction(AssignOutfitCategoryToInteraction.GlobalOutfitSingleton, true);
                 gameObject.AddInteraction(AssignOutfitCategoryToInteraction.Singleton, true);
-                gameObject.AddInteraction(AssignOutfitToInteraction.GlobalOutfitSingleton, true);
-                gameObject.AddInteraction(AssignOutfitToInteraction.PartialOutfitSingleton, true);
-                gameObject.AddInteraction(AssignOutfitToInteraction.Singleton, true);
+                gameObject.AddInteraction(EditAssignedOutfit.GlobalOutfitSingleton, true);
+                gameObject.AddInteraction(EditAssignedOutfit.Singleton, true);
                 gameObject.AddInteraction(ConfigureOutfitAssignment.GlobalOutfitSingleton, true);
                 gameObject.AddInteraction(ConfigureOutfitAssignment.Singleton, true);
                 gameObject.AddInteraction(CopyAssignedOutfitToInteraction.GlobalOutfitSingleton, true);
                 gameObject.AddInteraction(CopyAssignedOutfitToInteraction.Singleton, true);
                 gameObject.AddInteraction(CopyOutfitAssignmentToSim.Singleton, true);
-                gameObject.AddInteraction(EditAssignedOutfit.GlobalOutfitSingleton, true);
-                gameObject.AddInteraction(EditAssignedOutfit.Singleton, true);
                 gameObject.AddInteraction(ExtendAssignedOutfitToInteraction.GlobalOutfitSingleton, true);
                 gameObject.AddInteraction(ExtendAssignedOutfitToInteraction.Singleton, true);
                 gameObject.AddInteraction(UnassignOutfitToInteraction.GlobalOutfitSingleton, true);
